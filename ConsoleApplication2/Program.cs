@@ -15,6 +15,7 @@ namespace MetraApp
         {
             const int VID = 1240;
             const int PID = 63301;
+            const string firmwarePath = "../../data/257291_268_ASWC-USB_V320_wencrypt.hex";
 
             //Console.Out.Write("Test compile\n");
             HIDChecksumBoard testdev = null;
@@ -72,7 +73,7 @@ namespace MetraApp
 
             if (dr.Equals(DialogResult.Yes))
             {
-                testdev.UpdateAppFirmware("C:\\Users\\Lee\\Documents\\Visual Studio 2013\\Projects\\ConsoleApplication2\\ConsoleApplication2\\data\\257291_268_ASWC-USB_V320_wencrypt.hex");
+                testdev.UpdateAppFirmware(firmwarePath);
             }
 
             
