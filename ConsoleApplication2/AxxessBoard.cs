@@ -188,9 +188,21 @@ namespace MetraApp
             return newPacket;
         }
 
+        public void IntroSpam()
+        {
+            while(this.Status.Equals(BoardStatus.Idle))
+            {
+                this.SendIntroPacket();
+                Thread.Sleep(200);
+            }
+        }
+
         public override void UpdateAppFirmware(string path, bool force = false)
         {
             base.UpdateAppFirmware(path, force);
+
+            //Set board status to standby
+            this.Status = BoardStatus.Standby;
 
             //Preprocess the hexfile into a queue of 44-byte packets
             byte[] hexfile = File.ReadAllBytes(path);
@@ -216,16 +228,17 @@ namespace MetraApp
             form.Controls.Add(caption);
             form.Controls.Add(bar);
             form.Show();*/
-            
+
+
+
 
             //Send ready packet and wait for ack
             Console.WriteLine("Sending ready packet!");
-            this.Status = BoardStatus.Standby;
             Console.WriteLine("Waiting for ack!");
+            this.SendReadyPacket();
             while (!this.Status.Equals(BoardStatus.Ready))
             {
-                this.SendReadyPacket();
-                Thread.Sleep(1000);
+                Thread.Sleep(10);
             }
 
             //Send packets
@@ -243,7 +256,7 @@ namespace MetraApp
                 while (this.Status.Equals(BoardStatus.Standby))
                 {
                     //Console.WriteLine("Waiting for ack!");
-                    Thread.Sleep(20);
+                    Thread.Sleep(10);
                     //bar.Value = bar.Value + 1;
                 }
                 if ((counter % stepval) == 0)

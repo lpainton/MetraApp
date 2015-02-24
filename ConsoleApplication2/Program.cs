@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Windows.Forms;
@@ -66,6 +67,11 @@ namespace MetraApp
                     return;
                 }
             }
+
+            ThreadStart work = new ThreadStart(testdev.IntroSpam);
+            Thread nThread = new Thread(work);
+            nThread.Start();
+
             Console.Out.WriteLine("Product ID: " + testdev.ProductID);
             Console.Out.WriteLine("Firmware Version: " + testdev.AppFirmwareVersion);
 
@@ -74,10 +80,7 @@ namespace MetraApp
             if (dr.Equals(DialogResult.Yes))
             {
                 testdev.UpdateAppFirmware(firmwarePath);
-            }
-
-            
-            
+            }         
         }
     }
 }
