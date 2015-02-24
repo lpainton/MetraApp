@@ -1,6 +1,6 @@
 using System;
 
-namespace MetraApp
+namespace Metra.Axxess
 {
 	/// <summary>
 	/// Base class for report types. Simply wraps a byte buffer.

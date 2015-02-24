@@ -8,7 +8,7 @@ using System.IO;
 using System.Windows.Forms;
 
 
-namespace MetraApp
+namespace Metra.Axxess
 {
     class Program
     {

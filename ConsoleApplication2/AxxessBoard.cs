@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace MetraApp
+namespace Metra.Axxess
 {
     public enum PacketType
     {
@@ -16,8 +16,9 @@ namespace MetraApp
 
     public enum BoardStatus
     {
-        Idle,
+        NoOp,
         Hailed,
+        Idling,
         Ready,
         Standby,
         Finalizing,
@@ -38,7 +39,7 @@ namespace MetraApp
             this.ProductID = 0; 
             this.AppFirmwareVersion = 0;
             this.BootFirmwareVersion = 0;
-            this.Status = BoardStatus.Idle;
+            this.Status = BoardStatus.NoOp;
         }
 
         public void SendIntroPacket() 
@@ -93,14 +94,17 @@ namespace MetraApp
             switch(this.Status)
             {
                 //If we're not expecting anything from the board we just ignore incoming.
-                case BoardStatus.Idle:
+                case BoardStatus.NoOp:
                     return;
 
                 //If we've hailed the board with an intro packet we'll be looking for version info.
                 case BoardStatus.Hailed:
                     if (ParseIntroPacket(oInRep.Buffer))
-                        this.Status = BoardStatus.Idle;
+                        this.Status = BoardStatus.Idling;
                     break;
+
+                case BoardStatus.Idling:
+                    return;
 
                 case BoardStatus.Standby:
                     if (IsAck(oInRep.Buffer))
@@ -190,7 +194,7 @@ namespace MetraApp
 
         public void IntroSpam()
         {
-            while(this.Status.Equals(BoardStatus.Idle))
+            while(this.Status.Equals(BoardStatus.Idling))
             {
                 this.SendIntroPacket();
                 Thread.Sleep(200);

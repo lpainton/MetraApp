@@ -7,7 +7,7 @@
     <ProjectGuid>{4C901EE2-0880-43B5-94FE-1629222A19CF}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MetraApp</RootNamespace>
+    <RootNamespace>Metra.Axxess</RootNamespace>
     <AssemblyName>ConsoleApplication2</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

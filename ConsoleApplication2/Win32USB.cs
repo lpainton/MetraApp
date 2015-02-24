@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace MetraApp
+namespace Metra.Axxess
 {
 	/// <summary>
 	/// Class that wraps USB API calls and structures
