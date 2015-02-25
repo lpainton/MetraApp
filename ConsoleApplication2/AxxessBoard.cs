@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Metra.Axxess
@@ -194,11 +195,18 @@ namespace Metra.Axxess
 
         public void IntroSpam()
         {
-            while(this.Status.Equals(BoardStatus.Idling))
+            while (this.Status.Equals(BoardStatus.Idling))
             {
                 this.SendIntroPacket();
                 Thread.Sleep(200);
             }
+        }
+
+        public void SpinupIntro()
+        {
+            ThreadStart work = new ThreadStart(IntroSpam);
+            Thread nThread = new Thread(work);
+            nThread.Start();
         }
 
         public override void UpdateAppFirmware(string path, bool force = false)

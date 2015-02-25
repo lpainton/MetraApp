@@ -80,7 +80,11 @@ namespace Metra.Axxess
             if (dr.Equals(DialogResult.Yes))
             {
                 testdev.UpdateAppFirmware(firmwarePath);
-            }         
+            }
+            else
+            {
+                return;
+            }  
         }
     }
 }
