@@ -79,7 +79,7 @@ namespace Metra.Axxess
 
             if (dr.Equals(DialogResult.Yes))
             {
-                testdev.UpdateAppFirmware(firmwarePath);
+                //testdev.UpdateAppFirmware(firmwarePath);
             }
             else
             {

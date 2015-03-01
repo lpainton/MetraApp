@@ -28,110 +28,28 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateApplicationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.boardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadFromFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.mainProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.mainStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.mainLabel = new System.Windows.Forms.Label();
-            this.updateButton = new System.Windows.Forms.Button();
+            this.connectLabel = new System.Windows.Forms.Label();
+            this.inetButton = new System.Windows.Forms.Button();
             this.connectButton = new System.Windows.Forms.Button();
-            this.menuStrip1.SuspendLayout();
+            this.remapButton = new System.Windows.Forms.Button();
+            this.fileButton = new System.Windows.Forms.Button();
+            this.remapLabel = new System.Windows.Forms.Label();
+            this.inetLabel = new System.Windows.Forms.Label();
+            this.fileLabel = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // menuStrip1
-            // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.boardToolStripMenuItem,
-            this.helpToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(257, 24);
-            this.menuStrip1.TabIndex = 0;
-            this.menuStrip1.Text = "menuStrip1";
-            // 
-            // fileToolStripMenuItem
-            // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.updateApplicationToolStripMenuItem,
-            this.exitToolStripMenuItem});
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
-            // 
-            // updateApplicationToolStripMenuItem
-            // 
-            this.updateApplicationToolStripMenuItem.Name = "updateApplicationToolStripMenuItem";
-            this.updateApplicationToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
-            this.updateApplicationToolStripMenuItem.Text = "Update App";
-            // 
-            // exitToolStripMenuItem
-            // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            // 
-            // boardToolStripMenuItem
-            // 
-            this.boardToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.updateToolStripMenuItem});
-            this.boardToolStripMenuItem.Name = "boardToolStripMenuItem";
-            this.boardToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
-            this.boardToolStripMenuItem.Text = "Board";
-            // 
-            // updateToolStripMenuItem
-            // 
-            this.updateToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.updateToolStripMenuItem1,
-            this.loadFromFileToolStripMenuItem});
-            this.updateToolStripMenuItem.Name = "updateToolStripMenuItem";
-            this.updateToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.updateToolStripMenuItem.Text = "Firmware";
-            // 
-            // updateToolStripMenuItem1
-            // 
-            this.updateToolStripMenuItem1.Name = "updateToolStripMenuItem1";
-            this.updateToolStripMenuItem1.Size = new System.Drawing.Size(162, 22);
-            this.updateToolStripMenuItem1.Text = "Force Update";
-            // 
-            // loadFromFileToolStripMenuItem
-            // 
-            this.loadFromFileToolStripMenuItem.Name = "loadFromFileToolStripMenuItem";
-            this.loadFromFileToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
-            this.loadFromFileToolStripMenuItem.Text = "Upload from File";
-            // 
-            // helpToolStripMenuItem
-            // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
-            // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
-            this.aboutToolStripMenuItem.Text = "About";
             // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mainProgressBar,
             this.mainStatusLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 186);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 320);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(257, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(498, 22);
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             this.statusStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.statusStrip1_ItemClicked);
@@ -148,50 +66,98 @@
             this.mainStatusLabel.Size = new System.Drawing.Size(118, 17);
             this.mainStatusLabel.Text = "toolStripStatusLabel1";
             // 
-            // mainLabel
+            // connectLabel
             // 
-            this.mainLabel.AutoSize = true;
-            this.mainLabel.Location = new System.Drawing.Point(12, 39);
-            this.mainLabel.Name = "mainLabel";
-            this.mainLabel.Size = new System.Drawing.Size(58, 13);
-            this.mainLabel.TabIndex = 3;
-            this.mainLabel.Text = "Board ID: -";
+            this.connectLabel.AutoSize = true;
+            this.connectLabel.Location = new System.Drawing.Point(12, 98);
+            this.connectLabel.Name = "connectLabel";
+            this.connectLabel.Size = new System.Drawing.Size(72, 13);
+            this.connectLabel.TabIndex = 3;
+            this.connectLabel.Text = "connectLabel";
             // 
-            // updateButton
+            // inetButton
             // 
-            this.updateButton.Location = new System.Drawing.Point(170, 149);
-            this.updateButton.Name = "updateButton";
-            this.updateButton.Size = new System.Drawing.Size(75, 23);
-            this.updateButton.TabIndex = 4;
-            this.updateButton.Text = "Update";
-            this.updateButton.UseVisualStyleBackColor = true;
-            this.updateButton.Click += new System.EventHandler(this.updateButton_Click);
+            this.inetButton.Location = new System.Drawing.Point(0, 187);
+            this.inetButton.Name = "inetButton";
+            this.inetButton.Size = new System.Drawing.Size(240, 80);
+            this.inetButton.TabIndex = 4;
+            this.inetButton.Text = "Update Firmware from the Internet";
+            this.inetButton.UseVisualStyleBackColor = true;
+            this.inetButton.Click += new System.EventHandler(this.updateButton_Click);
             // 
             // connectButton
             // 
-            this.connectButton.Location = new System.Drawing.Point(15, 149);
+            this.connectButton.Location = new System.Drawing.Point(0, 0);
             this.connectButton.Name = "connectButton";
-            this.connectButton.Size = new System.Drawing.Size(75, 23);
+            this.connectButton.Size = new System.Drawing.Size(240, 80);
             this.connectButton.TabIndex = 5;
-            this.connectButton.Text = "Connect";
+            this.connectButton.Text = "Connect to Device";
             this.connectButton.UseVisualStyleBackColor = true;
             this.connectButton.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // remapButton
+            // 
+            this.remapButton.Location = new System.Drawing.Point(258, 0);
+            this.remapButton.Name = "remapButton";
+            this.remapButton.Size = new System.Drawing.Size(240, 80);
+            this.remapButton.TabIndex = 6;
+            this.remapButton.Text = "Remap Buttons";
+            this.remapButton.UseVisualStyleBackColor = true;
+            // 
+            // fileButton
+            // 
+            this.fileButton.Location = new System.Drawing.Point(258, 187);
+            this.fileButton.Name = "fileButton";
+            this.fileButton.Size = new System.Drawing.Size(240, 80);
+            this.fileButton.TabIndex = 7;
+            this.fileButton.Text = "Update Firmware from File";
+            this.fileButton.UseVisualStyleBackColor = true;
+            this.fileButton.Click += new System.EventHandler(this.fileButton_Click);
+            // 
+            // remapLabel
+            // 
+            this.remapLabel.AutoSize = true;
+            this.remapLabel.Location = new System.Drawing.Point(279, 98);
+            this.remapLabel.Name = "remapLabel";
+            this.remapLabel.Size = new System.Drawing.Size(62, 13);
+            this.remapLabel.TabIndex = 8;
+            this.remapLabel.Text = "remapLabel";
+            // 
+            // inetLabel
+            // 
+            this.inetLabel.AutoSize = true;
+            this.inetLabel.Location = new System.Drawing.Point(12, 279);
+            this.inetLabel.Name = "inetLabel";
+            this.inetLabel.Size = new System.Drawing.Size(50, 13);
+            this.inetLabel.TabIndex = 9;
+            this.inetLabel.Text = "inetLabel";
+            // 
+            // fileLabel
+            // 
+            this.fileLabel.AutoSize = true;
+            this.fileLabel.Location = new System.Drawing.Point(279, 279);
+            this.fileLabel.Name = "fileLabel";
+            this.fileLabel.Size = new System.Drawing.Size(46, 13);
+            this.fileLabel.TabIndex = 10;
+            this.fileLabel.Text = "fileLabel";
             // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(257, 208);
+            this.ClientSize = new System.Drawing.Size(498, 342);
+            this.Controls.Add(this.fileLabel);
+            this.Controls.Add(this.inetLabel);
+            this.Controls.Add(this.remapLabel);
+            this.Controls.Add(this.fileButton);
+            this.Controls.Add(this.remapButton);
             this.Controls.Add(this.connectButton);
-            this.Controls.Add(this.updateButton);
-            this.Controls.Add(this.mainLabel);
+            this.Controls.Add(this.inetButton);
+            this.Controls.Add(this.connectLabel);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.menuStrip1);
             this.Name = "FormMain";
             this.Text = "Metra App for Windows";
             this.Load += new System.EventHandler(this.FormMain_Load);
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -201,22 +167,17 @@
 
         #endregion
 
-        private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem updateApplicationToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem boardToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem updateToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem updateToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem loadFromFileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripProgressBar mainProgressBar;
         private System.Windows.Forms.ToolStripStatusLabel mainStatusLabel;
-        private System.Windows.Forms.Label mainLabel;
-        private System.Windows.Forms.Button updateButton;
+        private System.Windows.Forms.Label connectLabel;
+        private System.Windows.Forms.Button inetButton;
         private System.Windows.Forms.Button connectButton;
+        private System.Windows.Forms.Button remapButton;
+        private System.Windows.Forms.Button fileButton;
+        private System.Windows.Forms.Label remapLabel;
+        private System.Windows.Forms.Label inetLabel;
+        private System.Windows.Forms.Label fileLabel;
     }
 }
 

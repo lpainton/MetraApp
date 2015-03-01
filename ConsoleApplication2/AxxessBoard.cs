@@ -25,6 +25,12 @@ namespace Metra.Axxess
         Finalizing,
     };
 
+    public enum BoardType
+    {
+        HIDChecksum,
+        HIDNoChecksum,
+    };
+
     public abstract class AxxessBoard : HIDDevice
     {
         //Board attributes
@@ -35,6 +41,9 @@ namespace Metra.Axxess
 
         public byte[] IntroPacket { get; protected set; }
         public byte[] ReadyPacket { get; protected set; }
+
+        public BoardType Type { get; protected set; }
+
         public AxxessBoard() : base() 
         { 
             this.ProductID = 0; 
@@ -63,7 +72,17 @@ namespace Metra.Axxess
         protected virtual void ProcessIntroPacket(byte[] packet) { return; }
 
         //Functional Logic
-        public virtual void UpdateAppFirmware(string path, bool force = false) { return; }
+        public virtual void UpdateAppFirmware(string path, ToolStripProgressBar bar) { return; }
+
+        #region Statics
+        public static AxxessBoard ConnectToBoard()
+        {
+            AxxessBoard device;
+            device = (AxxessBoard)HIDDevice.FindDevice(1240, 63301, typeof(HIDChecksumBoard));
+
+            return device;
+        }
+        #endregion
     }
 
     /// <summary>
@@ -76,6 +95,7 @@ namespace Metra.Axxess
         public HIDChecksumBoard()
             : base()
         {
+            this.Type = BoardType.HIDChecksum;
             this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
             this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
         }
@@ -195,7 +215,7 @@ namespace Metra.Axxess
 
         public void IntroSpam()
         {
-            while (this.Status.Equals(BoardStatus.Idling))
+            while (this.Status.Equals(BoardStatus.Idling) || this.Status.Equals(BoardStatus.Hailed))
             {
                 this.SendIntroPacket();
                 Thread.Sleep(200);
@@ -209,9 +229,40 @@ namespace Metra.Axxess
             nThread.Start();
         }
 
-        public override void UpdateAppFirmware(string path, bool force = false)
+        public override void UpdateAppFirmware(string path, ToolStripProgressBar bar)
         {
-            base.UpdateAppFirmware(path, force);
+            base.UpdateAppFirmware(path, bar);
+
+            if (bar != null)
+            {
+                bar.Value = 0;
+                bar.Text = "Querying device...";
+            }
+
+            //Listen to board
+            int counter = 0;
+            while (this.ProductID == 0)
+            {
+                try
+                {
+                    Console.Out.WriteLine("Sending intro packet...");
+                    this.SendIntroPacket();
+                    System.Threading.Thread.Sleep(200);
+                    counter++;
+                }
+                catch (Exception e)
+                {
+                    Console.Out.WriteLine(e.Message.ToString());
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                if (counter == 10)
+                {
+                    MessageBox.Show("Device not responding.  Please try disconnecting the device and restarting this application.", "Metra App for Windows");
+                    return;
+                }
+            }
+
 
             //Set board status to standby
             this.Status = BoardStatus.Standby;
@@ -230,20 +281,6 @@ namespace Metra.Axxess
                 packetQueue.Enqueue(packet);
             }
 
-            //Setup a progress bar for the transfer
-            /*Form form = new Form();
-            form.Name = "Progress Indicator";
-            Label caption = new Label();
-            caption.Text = "Installing firmware, do not unplug the device!";
-            ProgressBar bar = new ProgressBar();
-            bar.Maximum = packetQueue.Count;
-            form.Controls.Add(caption);
-            form.Controls.Add(bar);
-            form.Show();*/
-
-
-
-
             //Send ready packet and wait for ack
             Console.WriteLine("Sending ready packet!");
             Console.WriteLine("Waiting for ack!");
@@ -255,7 +292,7 @@ namespace Metra.Axxess
 
             //Send packets
             Console.WriteLine("Board is ready, preparing to stream file...");
-            int counter = 0;
+            counter = 0;
             int maxval = packetQueue.Count;
             int stepval = maxval / 100;
             int progress = 0;
@@ -274,6 +311,7 @@ namespace Metra.Axxess
                 if ((counter % stepval) == 0)
                 {
                     Console.WriteLine(progress + "%");
+                    bar.Value = progress;
                     progress++;
                 }
                 if (this.Status.Equals(BoardStatus.Finalizing))
@@ -283,7 +321,7 @@ namespace Metra.Axxess
             Console.WriteLine("100%");
             Console.WriteLine("Board firmware update completed!");
             //form.Close();
-            MessageBox.Show("Firmware installation completed!  Please close this application before unplugging the device.");
+            MessageBox.Show("Firmware installation completed!");
         }
     }
 }
