@@ -8,12 +8,12 @@ namespace Metra.Axxess
 {
     public class AxxessReport : Report
     {
-        public AxxessReport(AxxessBoard dev) : base(dev) { }
+        public AxxessReport(HIDAxxessBoard dev) : base(dev) { }
     }
 
     public class TestInputReport : InputReport
     {
-        public TestInputReport(AxxessBoard dev) : base(dev)
+        public TestInputReport(HIDAxxessBoard dev) : base(dev)
         {
         }
 
@@ -24,12 +24,12 @@ namespace Metra.Axxess
 
     public class TestOutputReport : OutputReport
     {
-        public TestOutputReport(AxxessBoard dev) : base(dev) { }
+        public TestOutputReport(HIDAxxessBoard dev) : base(dev) { }
     }
 
     public class IntroReport : OutputReport
     {
-        public IntroReport(AxxessBoard dev) : base(dev)
+        public IntroReport(HIDAxxessBoard dev) : base(dev)
         {
             this.SetBuffer(dev.IntroPacket);
         }
@@ -37,7 +37,7 @@ namespace Metra.Axxess
 
     public class ReadyReport : OutputReport
     {
-        public ReadyReport(AxxessBoard dev) : base(dev)
+        public ReadyReport(HIDAxxessBoard dev) : base(dev)
         {
             this.SetBuffer(dev.ReadyPacket);
         }
@@ -45,7 +45,7 @@ namespace Metra.Axxess
 
     public class GenericReport : OutputReport
     {
-        public GenericReport(AxxessBoard dev, byte[] packet) : base(dev)
+        public GenericReport(HIDAxxessBoard dev, byte[] packet) : base(dev)
         {
             this.SetBuffer(dev.PrepPacket(packet));
         }

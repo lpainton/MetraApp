@@ -15,13 +15,22 @@ namespace Metra.Axxess
         ReadyPacket,
     };
 
+    /// <summary>
+    /// An enum representing the current status of the board as it regards updates and remapping.
+    /// NoOp: Board is in a non-ready state
+    /// Hailed: Initial intro packet has been sent
+    /// Idling: Board is in pre-ready state but otherwise non-active
+    /// Standby: Update cycle begun and awaiting board response
+    /// Ready: Board is in ready-state and prepared to receive data packets
+    /// Finalizing: Board has completed a data operation and is exiting ready-state.
+    /// </summary>
     public enum BoardStatus
     {
         NoOp,
         Hailed,
         Idling,
-        Ready,
         Standby,
+        Ready,
         Finalizing,
     };
 
@@ -31,8 +40,13 @@ namespace Metra.Axxess
         HIDNoChecksum,
     };
 
-    public abstract class AxxessBoard : HIDDevice
+    public delegate void PacketProcessor(byte[] packet);
+
+    public abstract class HIDAxxessBoard : HIDDevice, IAxxessDevice
     {
+        //Stores delegates to be called for packet handling
+        Dictionary<BoardStatus, PacketProcessor> _packetHandlers;
+
         //Board attributes
         public int ProductID { get; protected set; }
         public int AppFirmwareVersion { get; protected set; }
@@ -44,24 +58,32 @@ namespace Metra.Axxess
 
         public BoardType Type { get; protected set; }
 
-        public AxxessBoard() : base() 
+        public HIDAxxessBoard() : base() 
         { 
             this.ProductID = 0; 
             this.AppFirmwareVersion = 0;
             this.BootFirmwareVersion = 0;
             this.Status = BoardStatus.NoOp;
+            _packetHandlers = new Dictionary<BoardStatus, PacketProcessor>();
+
+            foreach (BoardStatus status in Enum.GetValues(typeof(BoardStatus)))
+            {
+                _packetHandlers.Add(status, HandleNoOp);
+            }
         }
 
+        //Atomic packet operations
         public void SendIntroPacket() 
         { 
             this.Write(new IntroReport(this));
-            this.Status = BoardStatus.Hailed;
-            Thread.Sleep(200);
         }
         public void SendReadyPacket() 
         { 
             this.Write(new ReadyReport(this));
-            this.Status = BoardStatus.Standby;
+        }
+        public void HandleNoOp(byte[] packet)
+        {
+            return;
         }
 
         public virtual bool IsAck(byte[] packet) { return false; }
@@ -71,24 +93,63 @@ namespace Metra.Axxess
         public virtual byte[] PrepPacket(byte[] packet) { return packet; }
         protected virtual void ProcessIntroPacket(byte[] packet) { return; }
 
+        /// <summary>
+        /// This method is called asynchronously when a packet is received.
+        /// Depending on the board status it will call whatever is in the _packetHandlers
+        /// dictionary keyed on BoardStatus.
+        /// 
+        /// To change the behavior of this method it's best to change the delegates assigned
+        /// to each board status.
+        /// </summary>
+        /// <param name="oInRep">The input report containing the packet</param>
+        protected override void HandleDataReceived(InputReport oInRep)
+        {
+            base.HandleDataReceived(oInRep);
+
+            this._packetHandlers[this.Status](oInRep.Buffer);
+        }
+
         //Functional Logic
+        public virtual void StartForceIdle();
         public virtual void UpdateAppFirmware(string path, ToolStripProgressBar bar) { return; }
 
         #region Statics
-        public static AxxessBoard ConnectToBoard()
+        public static HIDAxxessBoard ConnectToBoard()
         {
-            AxxessBoard device;
-            device = (AxxessBoard)HIDDevice.FindDevice(1240, 63301, typeof(HIDChecksumBoard));
+            HIDAxxessBoard device;
+            device = (HIDAxxessBoard)HIDDevice.FindDevice(1240, 63301, typeof(HIDChecksumBoard));
 
             return device;
         }
         #endregion
+
+        #region Explicit IAxxessDevice Implementation
+        int IAxxessDevice.ProductID
+        {
+            get { return this.ProductID; }
+        }
+        int IAxxessDevice.AppFirmwareVersion
+        {
+            get { return this.AppFirmwareVersion; }
+        }
+        int IAxxessDevice.BootFirmwareVersion
+        {
+            get { return this.BootFirmwareVersion; }
+        }
+        void IAxxessDevice.StartForceIdle()
+        {
+            this.StartForceIdle();
+        }
+        #endregion
+
+
+
     }
 
     /// <summary>
-    /// Class based implementatin of the HID w/ Checksum board
+    /// Class based implementation of the HID w/ Checksum board
     /// </summary>
-    public class HIDChecksumBoard : AxxessBoard
+    public class HIDChecksumBoard : HIDAxxessBoard
     {
         
         
@@ -213,18 +274,18 @@ namespace Metra.Axxess
             return newPacket;
         }
 
-        public void IntroSpam()
+        public void ForceIdle()
         {
-            while (this.Status.Equals(BoardStatus.Idling) || this.Status.Equals(BoardStatus.Hailed))
+            while (this.Status.Equals(BoardStatus.Idling))
             {
                 this.SendIntroPacket();
                 Thread.Sleep(200);
             }
         }
 
-        public void SpinupIntro()
+        public void StartForceIdle()
         {
-            ThreadStart work = new ThreadStart(IntroSpam);
+            ThreadStart work = new ThreadStart(ForceIdle);
             Thread nThread = new Thread(work);
             nThread.Start();
         }
@@ -246,6 +307,7 @@ namespace Metra.Axxess
                 try
                 {
                     Console.Out.WriteLine("Sending intro packet...");
+                    this.Status = BoardStatus.Hailed;
                     this.SendIntroPacket();
                     System.Threading.Thread.Sleep(200);
                     counter++;
@@ -284,6 +346,7 @@ namespace Metra.Axxess
             //Send ready packet and wait for ack
             Console.WriteLine("Sending ready packet!");
             Console.WriteLine("Waiting for ack!");
+            this.Status = BoardStatus.Standby;
             this.SendReadyPacket();
             while (!this.Status.Equals(BoardStatus.Ready))
             {
@@ -318,10 +381,12 @@ namespace Metra.Axxess
                     break;
             }
 
+            this.Status = BoardStatus.Finalizing;
             Console.WriteLine("100%");
             Console.WriteLine("Board firmware update completed!");
             //form.Close();
             MessageBox.Show("Firmware installation completed!");
+            this.Status = BoardStatus.NoOp;
         }
     }
 }
