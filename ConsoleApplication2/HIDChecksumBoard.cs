@@ -20,12 +20,12 @@ namespace Metra.Axxess
             this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
             this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
 
-            this._packetHandlers[BoardStatus.Hailed] = packet => { if (ParseIntroPacket(packet)) this.Status = BoardStatus.Idling; };
+            /*this._packetHandlers[BoardStatus.Hailed] = packet => { if (ParseIntroPacket(packet)) this.Status = BoardStatus.Idling; };
             this._packetHandlers[BoardStatus.Standby] = packet =>
             {
                 if (IsAck(packet)) { this.Status = BoardStatus.Ready; }
                 else if (IsFinal(packet)) { this.Status = BoardStatus.Finalizing; }
-            };
+            };*/
         }
 
         /*protected override void HandleDataReceived(InputReport oInRep)
@@ -95,6 +95,11 @@ namespace Metra.Axxess
             else { return false; }
         }
 
+        protected override bool ProcessIntroPacket(byte[] packet)
+        {
+            return this.ParseIntroPacket(packet);
+        }        
+
         public override bool IsAck(byte[] packet) 
         {
             return ((packet[4] == 0x41)
@@ -136,21 +141,21 @@ namespace Metra.Axxess
             return newPacket;
         }
 
-        public void ForceIdle()
+        /*public void ForceIdle()
         {
             while (this.Status.Equals(BoardStatus.Idling))
             {
                 this.SendIntroPacket();
                 Thread.Sleep(200);
             }
-        }
+        }*/
 
-        public void StartForceIdle()
+        /*public void StartForceIdle()
         {
             ThreadStart work = new ThreadStart(ForceIdle);
             Thread nThread = new Thread(work);
             nThread.Start();
-        }
+        }*/
 
         public override void UpdateAppFirmware(string path, ToolStripProgressBar bar)
         {

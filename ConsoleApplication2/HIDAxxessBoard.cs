@@ -15,8 +15,9 @@ namespace Metra.Axxess
     public abstract class HIDAxxessBoard : HIDDevice, IAxxessDevice
     {
         //Stores delegates to be called for packet handling
-        private List<PacketHandler> _packetChain;
-        //private PacketHandler Handler { get; set; }
+        //private List<PacketHandler> _packetChain;
+        private Queue<PacketType> _packetQueue;
+
 
         //Board attributes
         public int ProductID { get; protected set; }
@@ -36,7 +37,7 @@ namespace Metra.Axxess
             this.AppFirmwareVersion = 0;
             this.BootFirmwareVersion = 0;
             this.Status = BoardStatus.Idle;
-            _packetChain = new List<PacketHandler>();
+            //_packetChain = new List<PacketHandler>();
         }
 
         //Atomic packet operations
@@ -48,19 +49,18 @@ namespace Metra.Axxess
         {
             this.Write(new ReadyReport(this));
         }
+        public virtual byte[] PrepPacket(byte[] packet) { return packet; }
+        protected virtual bool ProcessIntroPacket(byte[] packet) { return false; }
 
         //Event related stuff
         protected virtual bool IsAck(byte[] packet) { return false; }
         protected virtual bool IsFinal(byte[] packet) { return false; }
 
-        protected virtual void AddHandler(PacketHandler handler)
+        //Packet chain
+        /*protected virtual void AddHandler(PacketHandler handler)
         {
             this._packetChain.Add(handler);
-        }
-
-        //Packet manipulations
-        public virtual byte[] PrepPacket(byte[] packet) { return packet; }
-        protected virtual void ProcessIntroPacket(byte[] packet) { return; }
+        }*/
 
         /// <summary>
         /// This method is called asynchronously when a packet is received.
@@ -75,11 +75,20 @@ namespace Metra.Axxess
         {
             base.HandleDataReceived(InRep);
 
-            List<PacketHandler> nChain = new List<PacketHandler>();
+            /*List<PacketHandler> nChain = new List<PacketHandler>();
             foreach (PacketHandler h in this._packetChain)
             {
                 if (h(InRep.Buffer))
-
+            }*/
+            lock (this._packetQueue)
+            {
+                byte[] packet = InRep.Buffer;
+                if (this.ProcessIntroPacket(packet))
+                    this._packetQueue.Enqueue(PacketType.Intro);
+                else if (this.IsAck(packet))
+                    this._packetQueue.Enqueue(PacketType.Ack);
+                else if (this.IsFinal(packet))
+                    this._packetQueue.Enqueue(PacketType.Final);
             }
         }
 

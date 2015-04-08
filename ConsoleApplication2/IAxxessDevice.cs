@@ -33,6 +33,25 @@ namespace Metra.Axxess
         HIDNoChecksum,
     };
 
+    public enum PacketType
+    {
+        Intro,
+        Ack,
+        Final
+    };
+
+    /*public class Packet
+    {
+        public byte[] Bytes { get; private set; }
+        public PacketType Type { get; private set; }
+
+        public Packet(byte[] packet, PacketType type)
+        {
+            this.Bytes = packet;
+            this.Type = type;
+        }
+    }*/
+
     interface IAxxessDevice
     {
         /// <summary>
@@ -58,5 +77,7 @@ namespace Metra.Axxess
         byte[] PrepPacket(byte[] packet);
         byte[] IntroPacket { get; }
         byte[] ReadyPacket { get; }
+
+        void SendIntroPacket();
     }
 }
