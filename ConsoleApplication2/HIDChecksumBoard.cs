@@ -157,7 +157,7 @@ namespace Metra.Axxess
             nThread.Start();
         }*/
 
-        public override void UpdateAppFirmware(string path, ToolStripProgressBar bar)
+        /*public override void UpdateAppFirmware(string path, ToolStripProgressBar bar)
         {
             base.UpdateAppFirmware(path, bar);
 
@@ -240,6 +240,6 @@ namespace Metra.Axxess
             Console.WriteLine("Board firmware update completed!");
             MessageBox.Show("Firmware installation completed!");
             this.Status = BoardStatus.NoOp;
-        }
+        }*/
     }
 }

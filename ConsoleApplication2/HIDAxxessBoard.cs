@@ -16,8 +16,7 @@ namespace Metra.Axxess
     {
         //Stores delegates to be called for packet handling
         //private List<PacketHandler> _packetChain;
-        private Queue<PacketType> _packetQueue;
-
+        //private Queue<PacketType> _packetQueue;
 
         //Board attributes
         public int ProductID { get; protected set; }
@@ -56,45 +55,41 @@ namespace Metra.Axxess
         protected virtual bool IsAck(byte[] packet) { return false; }
         protected virtual bool IsFinal(byte[] packet) { return false; }
 
-        //Packet chain
-        /*protected virtual void AddHandler(PacketHandler handler)
-        {
-            this._packetChain.Add(handler);
-        }*/
-
         /// <summary>
         /// This method is called asynchronously when a packet is received.
-        /// Depending on the board status it will call whatever is in the _packetHandlers
-        /// dictionary keyed on BoardStatus.
-        /// 
-        /// To change the behavior of this method it's best to change the delegates assigned
-        /// to each board status.
+        /// It will forward the packet to the appropriate event handler based on identification
         /// </summary>
         /// <param name="oInRep">The input report containing the packet</param>
         protected override void HandleDataReceived(InputReport InRep)
         {
             base.HandleDataReceived(InRep);
 
-            /*List<PacketHandler> nChain = new List<PacketHandler>();
-            foreach (PacketHandler h in this._packetChain)
+            byte[] packet = InRep.Buffer;
+
+            if (this.ProductID == 0)
             {
-                if (h(InRep.Buffer))
-            }*/
-            lock (this._packetQueue)
-            {
-                byte[] packet = InRep.Buffer;
                 if (this.ProcessIntroPacket(packet))
-                    this._packetQueue.Enqueue(PacketType.Intro);
-                else if (this.IsAck(packet))
-                    this._packetQueue.Enqueue(PacketType.Ack);
-                else if (this.IsFinal(packet))
-                    this._packetQueue.Enqueue(PacketType.Final);
+                    this.OnIntroReceived(new PacketEventArgs(packet));
             }
+            else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
+            else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
         }
+        
+        #region Events
+        public event IntroEventHandler OnIntro;
+        public event AckEventHandler OnAck;
+        public event FinalEventHandler OnFinal;
+
+        public virtual void OnIntroReceived(EventArgs e) { if (OnIntro != null) OnIntro(this, e); }
+        public virtual void OnAckReceived(EventArgs e) { if (OnAck != null) OnAck(this, e); }
+        public virtual void OnFinalReceived(EventArgs e) { if (OnFinal != null) OnFinal(this, e); }
+        #endregion 
+
+
 
         //Functional Logic
-        public virtual void StartForceIdle();
-        public virtual void UpdateAppFirmware(string path, ToolStripProgressBar bar) { return; }
+        //public virtual void StartForceIdle();
+        //public virtual void UpdateAppFirmware(string path, ToolStripProgressBar bar) { return; }
 
         #region Statics
         public static HIDAxxessBoard ConnectToBoard()
@@ -119,13 +114,24 @@ namespace Metra.Axxess
         {
             get { return this.BootFirmwareVersion; }
         }
-        void IAxxessDevice.StartForceIdle()
+        /*void IAxxessDevice.StartForceIdle()
         {
             this.StartForceIdle();
-        }
+        }*/
         byte[] IAxxessDevice.PrepPacket(byte[] packet) { return this.PrepPacket(packet); }
         byte[] IAxxessDevice.IntroPacket { get { return this.IntroPacket; } }
         byte[] IAxxessDevice.ReadyPacket { get { return this.ReadyPacket; } }
+
+        void IAxxessDevice.SendIntroPacket() { this.SendIntroPacket(); }
+        void IAxxessDevice.SendReadyPacket() { this.SendReadyPacket(); }
+        void IAxxessDevice.SendPacket(byte[] packet) { this.Write(new GenericReport(this, packet)); }
+        
+        void IAxxessDevice.AddAckEvent(IntroEventHandler handler) { this.OnIntro += handler; }
+        void IAxxessDevice.AddAckEvent(AckEventHandler handler) { this.OnAck += handler; }
+        void IAxxessDevice.AddAckEvent(FinalEventHandler handler) { this.OnFinal += handler; }
+
+
+        //PacketType IAxxessDevice.FetchPacketFromQueue() { return this._packetQueue.Dequeue(); }
         #endregion
     }
 }

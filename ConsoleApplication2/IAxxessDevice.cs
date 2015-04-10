@@ -40,17 +40,19 @@ namespace Metra.Axxess
         Final
     };
 
-    /*public class Packet
-    {
-        public byte[] Bytes { get; private set; }
-        public PacketType Type { get; private set; }
+    public delegate void IntroEventHandler(object sender, EventArgs e);
+    public delegate void AckEventHandler(object sender, EventArgs e);
+    public delegate void FinalEventHandler(object sender, EventArgs e);
 
-        public Packet(byte[] packet, PacketType type)
+    class PacketEventArgs : EventArgs
+    {
+        byte[] Packet { get; private set; }
+
+        public PacketEventArgs(byte[] packet) : base()
         {
-            this.Bytes = packet;
-            this.Type = type;
+            this.Packet = packet;
         }
-    }*/
+    }
 
     interface IAxxessDevice
     {
@@ -72,12 +74,43 @@ namespace Metra.Axxess
         /// <summary>
         /// Forces idle status on the board.  Use when preparing for firmware installation.
         /// </summary>
-        void StartForceIdle();
+        //void StartForceIdle();
 
         byte[] PrepPacket(byte[] packet);
         byte[] IntroPacket { get; }
         byte[] ReadyPacket { get; }
 
+        /// <summary>
+        /// Sends an intro packet to the board.
+        /// </summary>
         void SendIntroPacket();
+
+        /// <summary>
+        /// Sends a ready packet to the board which tells it to prepare for a firmware update.
+        /// </summary>
+        void SendReadyPacket();
+
+        /// <summary>
+        /// Sends the provided packet.
+        /// </summary>
+        /// <param name="packet">A raw byte array packet to send.</param>
+        void SendPacket(byte[] packet);
+
+        /// <summary>
+        /// Fired when an intro packet is received from the board.
+        /// </summary>
+        void AddIntroEvent(IntroEventHandler handler);
+
+        /// <summary>
+        /// Fired when the board sends and ack.
+        /// </summary>
+        void AddAckEvent(AckEventHandler handler);
+
+        /// <summary>
+        /// Fired when the board is finished with the update process.
+        /// </summary>
+        void AddFinalEvent(FinalEventHandler handler);
+
+        //PacketType FetchPacketFromQueue();
     }
 }

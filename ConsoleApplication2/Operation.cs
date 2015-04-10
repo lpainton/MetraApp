@@ -51,5 +51,11 @@ namespace Metra.Axxess
             this.Status = OperationStatus.Working;
             this.WorkerThread.Start();
         }
+
+        public virtual void Stop()
+        {
+            this.Status = OperationStatus.Finished;
+            this.WorkerThread.Abort();
+        }
     }
 }
