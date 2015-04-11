@@ -7,16 +7,39 @@ using System.Threading;
 
 namespace Metra.Axxess
 {
-    enum OperationStatus
+    public enum OperationStatus
     {
         Ready,
         Working,
         Finished
     };
 
-    class Operation
+    public enum OperationType
+    {
+        Download,
+        Idle,
+        Firmware,
+        Remap
+    };
+
+    public class OpArgs
+    {
+        public IAxxessDevice Device { get; private set; }
+        public string Path { get; private set; }
+
+        public OpArgs(IAxxessDevice device, string path = null)
+        {
+            this.Device = device;
+            this.Path = path;
+        }
+    }
+
+    abstract class Operation : IOperation
     {
         public OperationStatus Status { get; protected set; }
+        public int OperationsCompleted { get; protected set; }
+        public int TotalOperations { get; protected set; }
+        public int Progress { get { return OperationsCompleted / TotalOperations; } }
 
         public Thread WorkerThread { get; private set; }
         public ThreadStart WorkerMethod { get; private set; }
@@ -30,6 +53,8 @@ namespace Metra.Axxess
 
             this.Device = device;
 
+            this.OperationsCompleted = 0;
+            this.TotalOperations = 1;
             this.Status = OperationStatus.Ready;
         }
 
@@ -37,7 +62,7 @@ namespace Metra.Axxess
         {
             while(this.Status.Equals(OperationStatus.Working))
             {
-                this.Worker();
+                this.Work();
             }
         }
 
@@ -56,6 +81,58 @@ namespace Metra.Axxess
         {
             this.Status = OperationStatus.Finished;
             this.WorkerThread.Abort();
+            this.Dispose();
         }
+
+        public virtual void Dispose()
+        {
+            return;
+        }
+
+
+        #region Static Methods
+        public IOperation InvokeOperation(OperationType type, OpArgs args)
+        {
+            switch(type)
+            {
+                case OperationType.Download:
+                    return null;
+
+                case OperationType.Idle:
+                    return new IdleOperation(args.Device);
+
+                case OperationType.Firmware:
+                    return new FirmwareOperation(args.Device, new Firmware(args.Path, args.Device.PacketSize));
+
+                case OperationType.Remap:
+                    return null;
+
+                default:
+                    return null;
+            }            
+        }
+        #endregion
+    
+        #region Explicit IOperation Implementation
+        OperationStatus IOperation.Status
+        {
+            get { return this.Status; }
+        }
+
+        int IOperation.Progress
+        {
+            get { return this.Progress; }
+        }
+
+        void IOperation.Start()
+        {
+            this.Start();
+        }
+
+        void IOperation.Stop()
+        {
+            this.Stop();
+        }
+        #endregion
     }
 }

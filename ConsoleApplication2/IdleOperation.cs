@@ -20,13 +20,8 @@ namespace Metra.Axxess
         {
             base.Work();
 
-            Device.SendIntroPacket();
+            this.Device.SendIntroPacket();
             Thread.Sleep(SLEEP_TIME);
-        }
-
-        public void Stop()
-        {
-            this.Status = OperationStatus.Finished;
         }
     }
 }

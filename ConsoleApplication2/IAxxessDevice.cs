@@ -71,10 +71,7 @@ namespace Metra.Axxess
         /// </summary>
         int BootFirmwareVersion { get; }
 
-        /// <summary>
-        /// Forces idle status on the board.  Use when preparing for firmware installation.
-        /// </summary>
-        //void StartForceIdle();
+        int PacketSize { get; }
 
         byte[] PrepPacket(byte[] packet);
         byte[] IntroPacket { get; }
@@ -100,17 +97,18 @@ namespace Metra.Axxess
         /// Fired when an intro packet is received from the board.
         /// </summary>
         void AddIntroEvent(IntroEventHandler handler);
+        void RemoveIntroEvent(IntroEventHandler handler);
 
         /// <summary>
         /// Fired when the board sends and ack.
         /// </summary>
         void AddAckEvent(AckEventHandler handler);
+        void RemoveAckEvent(AckEventHandler handler);
 
         /// <summary>
         /// Fired when the board is finished with the update process.
         /// </summary>
         void AddFinalEvent(FinalEventHandler handler);
-
-        //PacketType FetchPacketFromQueue();
+        void RemoveFinalEvent(FinalEventHandler handler);
     }
 }

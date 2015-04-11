@@ -50,6 +50,7 @@
     <Compile Include="HIDDevice.cs" />
     <Compile Include="IAxxessDevice.cs" />
     <Compile Include="IdleOperation.cs" />
+    <Compile Include="IOperation.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

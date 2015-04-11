@@ -14,15 +14,13 @@ namespace Metra.Axxess
 
     public abstract class HIDAxxessBoard : HIDDevice, IAxxessDevice
     {
-        //Stores delegates to be called for packet handling
-        //private List<PacketHandler> _packetChain;
-        //private Queue<PacketType> _packetQueue;
-
         //Board attributes
+        public virtual int PacketSize { get; protected set; }
+
         public int ProductID { get; protected set; }
         public int AppFirmwareVersion { get; protected set; }
         public int BootFirmwareVersion { get; protected set; }
-        private BoardStatus Status { get; set; }
+        private BoardStatus Status { get; set; }        
 
         public byte[] IntroPacket { get; protected set; }
         public byte[] ReadyPacket { get; protected set; }
@@ -36,7 +34,6 @@ namespace Metra.Axxess
             this.AppFirmwareVersion = 0;
             this.BootFirmwareVersion = 0;
             this.Status = BoardStatus.Idle;
-            //_packetChain = new List<PacketHandler>();
         }
 
         //Atomic packet operations
@@ -85,12 +82,6 @@ namespace Metra.Axxess
         public virtual void OnFinalReceived(EventArgs e) { if (OnFinal != null) OnFinal(this, e); }
         #endregion 
 
-
-
-        //Functional Logic
-        //public virtual void StartForceIdle();
-        //public virtual void UpdateAppFirmware(string path, ToolStripProgressBar bar) { return; }
-
         #region Statics
         public static HIDAxxessBoard ConnectToBoard()
         {
@@ -102,22 +93,11 @@ namespace Metra.Axxess
         #endregion
 
         #region Explicit IAxxessDevice Implementation
-        int IAxxessDevice.ProductID
-        {
-            get { return this.ProductID; }
-        }
-        int IAxxessDevice.AppFirmwareVersion
-        {
-            get { return this.AppFirmwareVersion; }
-        }
-        int IAxxessDevice.BootFirmwareVersion
-        {
-            get { return this.BootFirmwareVersion; }
-        }
-        /*void IAxxessDevice.StartForceIdle()
-        {
-            this.StartForceIdle();
-        }*/
+        int IAxxessDevice.ProductID { get { return this.ProductID; } }
+        int IAxxessDevice.AppFirmwareVersion { get { return this.AppFirmwareVersion; } }
+        int IAxxessDevice.BootFirmwareVersion { get { return this.BootFirmwareVersion; } }
+        int IAxxessDevice.PacketSize { get { return this.PacketSize; } }
+
         byte[] IAxxessDevice.PrepPacket(byte[] packet) { return this.PrepPacket(packet); }
         byte[] IAxxessDevice.IntroPacket { get { return this.IntroPacket; } }
         byte[] IAxxessDevice.ReadyPacket { get { return this.ReadyPacket; } }
@@ -126,12 +106,13 @@ namespace Metra.Axxess
         void IAxxessDevice.SendReadyPacket() { this.SendReadyPacket(); }
         void IAxxessDevice.SendPacket(byte[] packet) { this.Write(new GenericReport(this, packet)); }
         
-        void IAxxessDevice.AddAckEvent(IntroEventHandler handler) { this.OnIntro += handler; }
+        void IAxxessDevice.AddIntroEvent(IntroEventHandler handler) { this.OnIntro += handler; }
+        void IAxxessDevice.RemoveIntroEvent(IntroEventHandler handler) { this.OnIntro -= handler; }
         void IAxxessDevice.AddAckEvent(AckEventHandler handler) { this.OnAck += handler; }
-        void IAxxessDevice.AddAckEvent(FinalEventHandler handler) { this.OnFinal += handler; }
+        void IAxxessDevice.RemoveAckEvent(AckEventHandler handler) { this.OnAck -= handler; }
+        void IAxxessDevice.AddFinalEvent(FinalEventHandler handler) { this.OnFinal += handler; }
+        void IAxxessDevice.RemoveFinalEvent(FinalEventHandler handler) { this.OnFinal -= handler; }
 
-
-        //PacketType IAxxessDevice.FetchPacketFromQueue() { return this._packetQueue.Dequeue(); }
         #endregion
     }
 }

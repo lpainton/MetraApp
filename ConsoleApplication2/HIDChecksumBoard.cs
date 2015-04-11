@@ -17,53 +17,10 @@ namespace Metra.Axxess
             : base()
         {
             this.Type = BoardType.HIDChecksum;
+            this.PacketSize = 44;
             this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
             this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
-
-            /*this._packetHandlers[BoardStatus.Hailed] = packet => { if (ParseIntroPacket(packet)) this.Status = BoardStatus.Idling; };
-            this._packetHandlers[BoardStatus.Standby] = packet =>
-            {
-                if (IsAck(packet)) { this.Status = BoardStatus.Ready; }
-                else if (IsFinal(packet)) { this.Status = BoardStatus.Finalizing; }
-            };*/
         }
-
-        /*protected override void HandleDataReceived(InputReport oInRep)
-        {
-            //Test code block
-            //foreach (byte b in oInRep.Buffer) { Console.Out.Write(b + " "); }
-            //Console.Out.Write("\n");
-
-            //How we handle packets depends on what the status of the board is
-            switch(this.Status)
-            {
-                //If we're not expecting anything from the board we just ignore incoming.
-                case BoardStatus.NoOp:
-                    return;
-
-                //If we've hailed the board with an intro packet we'll be looking for version info.
-                case BoardStatus.Hailed:
-                    if (ParseIntroPacket(oInRep.Buffer))
-                        this.Status = BoardStatus.Idling;
-                    break;
-
-                case BoardStatus.Idling:
-                    return;
-
-                case BoardStatus.Standby:
-                    if (IsAck(oInRep.Buffer))
-                        this.Status = BoardStatus.Ready;
-                    else if (IsFinal(oInRep.Buffer))
-                        this.Status = BoardStatus.Finalizing;
-                    break;
-
-                case BoardStatus.Ready:
-                    return;
-
-                case BoardStatus.Finalizing:
-                    return;
-            }
-        }*/
 
         /// <summary>
         /// Method to extract board versioning info from intro response packets
@@ -139,107 +96,6 @@ namespace Metra.Axxess
             newPacket[64] = checksum;
 
             return newPacket;
-        }
-
-        /*public void ForceIdle()
-        {
-            while (this.Status.Equals(BoardStatus.Idling))
-            {
-                this.SendIntroPacket();
-                Thread.Sleep(200);
-            }
-        }*/
-
-        /*public void StartForceIdle()
-        {
-            ThreadStart work = new ThreadStart(ForceIdle);
-            Thread nThread = new Thread(work);
-            nThread.Start();
-        }*/
-
-        /*public override void UpdateAppFirmware(string path, ToolStripProgressBar bar)
-        {
-            base.UpdateAppFirmware(path, bar);
-
-            if (bar != null)
-            {
-                bar.Value = 0;
-                bar.Text = "Querying device...";
-            }
-
-            //Listen to board
-            int counter = 0;
-            while (this.ProductID == 0)
-            {
-                try
-                {
-                    Console.Out.WriteLine("Sending intro packet...");
-                    this.Status = BoardStatus.Hailed;
-                    this.SendIntroPacket();
-                    System.Threading.Thread.Sleep(200);
-                    counter++;
-                }
-                catch (Exception e)
-                {
-                    Console.Out.WriteLine(e.Message.ToString());
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                if (counter == 10)
-                {
-                    MessageBox.Show("Device not responding.  Please try disconnecting the device and restarting this application.", "Metra App for Windows");
-                    return;
-                }
-            }
-
-
-            //Set board status to standby
-            this.Status = BoardStatus.Standby;
-
-            //Prep the file for transmission
-            Firmware hexFile = new Firmware(path, 44);
-
-            //Send ready packet and wait for ack
-            Console.WriteLine("Sending ready packet!");
-            Console.WriteLine("Waiting for ack!");
-            this.Status = BoardStatus.Standby;
-            this.SendReadyPacket();
-            while (!this.Status.Equals(BoardStatus.Ready))
-            {
-                Thread.Sleep(10);
-            }
-
-            //Send packets
-            Console.WriteLine("Board is ready, preparing to stream file...");
-            counter = 0;
-            int maxval = hexFile.Count;
-            int stepval = maxval / 100;
-            int progress = 0;
-
-            foreach (byte[] packet in hexFile)
-            {
-                this.Status = BoardStatus.Standby;
-                this.Write(new GenericReport(this, packet));
-                counter++;
-                while (this.Status.Equals(BoardStatus.Standby))
-                {
-                    Thread.Sleep(10);
-                }
-                if ((counter % stepval) == 0)
-                {
-                    //Console.WriteLine(progress + "%");
-                    bar.Value = progress;
-                    progress++;
-                }
-                if (this.Status.Equals(BoardStatus.Finalizing))
-                    break;
-            }
-
-            this.Status = BoardStatus.Finalizing;
-            Console.WriteLine("100%");
-            Console.WriteLine("Board firmware update completed!");
-            MessageBox.Show("Firmware installation completed!");
-            this.Status = BoardStatus.NoOp;
-        }*/
+        }        
     }
 }
