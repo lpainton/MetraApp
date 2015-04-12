@@ -24,10 +24,10 @@ namespace Metra.Axxess
 
     public class OpArgs
     {
-        public IAxxessDevice Device { get; private set; }
+        public IAxxessBoard Device { get; private set; }
         public string Path { get; private set; }
 
-        public OpArgs(IAxxessDevice device, string path = null)
+        public OpArgs(IAxxessBoard device, string path = null)
         {
             this.Device = device;
             this.Path = path;
@@ -44,9 +44,9 @@ namespace Metra.Axxess
         public Thread WorkerThread { get; private set; }
         public ThreadStart WorkerMethod { get; private set; }
 
-        public IAxxessDevice Device { get; private set; }
+        public IAxxessBoard Device { get; private set; }
 
-        public Operation(IAxxessDevice device)
+        public Operation(IAxxessBoard device)
         {
             this.WorkerMethod = this.DoWork;
             this.WorkerThread = new Thread(this.WorkerMethod);
@@ -91,7 +91,7 @@ namespace Metra.Axxess
 
 
         #region Static Methods
-        public IOperation InvokeOperation(OperationType type, OpArgs args)
+        public IOperation SpawnOperation(OperationType type, OpArgs args)
         {
             switch(type)
             {
@@ -99,10 +99,10 @@ namespace Metra.Axxess
                     return null;
 
                 case OperationType.Idle:
-                    return new IdleOperation(args.Device);
+                    return new OperationIdle(args.Device);
 
                 case OperationType.Firmware:
-                    return new FirmwareOperation(args.Device, new Firmware(args.Path, args.Device.PacketSize));
+                    return new OperationFirmware(args.Device, new AxxessFirmware(args.Path, args.Device.PacketSize));
 
                 case OperationType.Remap:
                     return null;

@@ -12,7 +12,7 @@ namespace Metra.Axxess
 {
     public delegate bool PacketHandler(byte[] packet);
 
-    public abstract class HIDAxxessBoard : HIDDevice, IAxxessDevice
+    public abstract class AxxessHIDBoard : HIDDevice, IAxxessBoard
     {
         //Board attributes
         public virtual int PacketSize { get; protected set; }
@@ -27,7 +27,7 @@ namespace Metra.Axxess
 
         public BoardType Type { get; protected set; }
 
-        public HIDAxxessBoard()
+        public AxxessHIDBoard()
             : base()
         {
             this.ProductID = 0;
@@ -82,36 +82,26 @@ namespace Metra.Axxess
         public virtual void OnFinalReceived(EventArgs e) { if (OnFinal != null) OnFinal(this, e); }
         #endregion 
 
-        #region Statics
-        public static HIDAxxessBoard ConnectToBoard()
-        {
-            HIDAxxessBoard device;
-            device = (HIDAxxessBoard)HIDDevice.FindDevice(1240, 63301, typeof(HIDChecksumBoard));
-
-            return device;
-        }
-        #endregion
-
         #region Explicit IAxxessDevice Implementation
-        int IAxxessDevice.ProductID { get { return this.ProductID; } }
-        int IAxxessDevice.AppFirmwareVersion { get { return this.AppFirmwareVersion; } }
-        int IAxxessDevice.BootFirmwareVersion { get { return this.BootFirmwareVersion; } }
-        int IAxxessDevice.PacketSize { get { return this.PacketSize; } }
+        int IAxxessBoard.ProductID { get { return this.ProductID; } }
+        int IAxxessBoard.AppFirmwareVersion { get { return this.AppFirmwareVersion; } }
+        int IAxxessBoard.BootFirmwareVersion { get { return this.BootFirmwareVersion; } }
+        int IAxxessBoard.PacketSize { get { return this.PacketSize; } }
 
-        byte[] IAxxessDevice.PrepPacket(byte[] packet) { return this.PrepPacket(packet); }
-        byte[] IAxxessDevice.IntroPacket { get { return this.IntroPacket; } }
-        byte[] IAxxessDevice.ReadyPacket { get { return this.ReadyPacket; } }
+        byte[] IAxxessBoard.PrepPacket(byte[] packet) { return this.PrepPacket(packet); }
+        byte[] IAxxessBoard.IntroPacket { get { return this.IntroPacket; } }
+        byte[] IAxxessBoard.ReadyPacket { get { return this.ReadyPacket; } }
 
-        void IAxxessDevice.SendIntroPacket() { this.SendIntroPacket(); }
-        void IAxxessDevice.SendReadyPacket() { this.SendReadyPacket(); }
-        void IAxxessDevice.SendPacket(byte[] packet) { this.Write(new GenericReport(this, packet)); }
+        void IAxxessBoard.SendIntroPacket() { this.SendIntroPacket(); }
+        void IAxxessBoard.SendReadyPacket() { this.SendReadyPacket(); }
+        void IAxxessBoard.SendPacket(byte[] packet) { this.Write(new GenericReport(this, packet)); }
         
-        void IAxxessDevice.AddIntroEvent(IntroEventHandler handler) { this.OnIntro += handler; }
-        void IAxxessDevice.RemoveIntroEvent(IntroEventHandler handler) { this.OnIntro -= handler; }
-        void IAxxessDevice.AddAckEvent(AckEventHandler handler) { this.OnAck += handler; }
-        void IAxxessDevice.RemoveAckEvent(AckEventHandler handler) { this.OnAck -= handler; }
-        void IAxxessDevice.AddFinalEvent(FinalEventHandler handler) { this.OnFinal += handler; }
-        void IAxxessDevice.RemoveFinalEvent(FinalEventHandler handler) { this.OnFinal -= handler; }
+        void IAxxessBoard.AddIntroEvent(IntroEventHandler handler) { this.OnIntro += handler; }
+        void IAxxessBoard.RemoveIntroEvent(IntroEventHandler handler) { this.OnIntro -= handler; }
+        void IAxxessBoard.AddAckEvent(AckEventHandler handler) { this.OnAck += handler; }
+        void IAxxessBoard.RemoveAckEvent(AckEventHandler handler) { this.OnAck -= handler; }
+        void IAxxessBoard.AddFinalEvent(FinalEventHandler handler) { this.OnFinal += handler; }
+        void IAxxessBoard.RemoveFinalEvent(FinalEventHandler handler) { this.OnFinal -= handler; }
 
         #endregion
     }

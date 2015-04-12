@@ -7,11 +7,11 @@ using System.Threading;
 
 namespace Metra.Axxess
 {
-    class IdleOperation : Operation
+    class OperationIdle : Operation
     {
         const int SLEEP_TIME = 100;
 
-        public IdleOperation(IAxxessDevice device) : base(device)
+        public OperationIdle(IAxxessBoard device) : base(device)
         {
 
         }

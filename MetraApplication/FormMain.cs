@@ -26,7 +26,7 @@ namespace MetraApplication
         public const int DbtDeviceremovecomplete = 0x8004; //A device has been completely removed
         public const int WmDevicechange = 0x0219; //Generic device change event
 
-        public HIDAxxessBoard attachedDevice;
+        public AxxessHIDBoard attachedDevice;
         public AppStatus Status { get; set; }
 
         public FormMain()
@@ -139,7 +139,7 @@ namespace MetraApplication
 
         private void button1_Click(object sender, EventArgs e)
         {
-            this.attachedDevice = HIDAxxessBoard.ConnectToBoard();
+            this.attachedDevice = AxxessHIDBoard.ConnectToBoard();
             if (this.attachedDevice != null)
             {
                 connectButton.Enabled = false;

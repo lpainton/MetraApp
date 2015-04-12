@@ -13,7 +13,7 @@ namespace Metra.Axxess
 
     public class IntroReport : OutputReport
     {
-        public IntroReport(IAxxessDevice dev) : base((HIDDevice)dev)
+        public IntroReport(IAxxessBoard dev) : base((HIDDevice)dev)
         {
             this.SetBuffer(dev.IntroPacket);
         }
@@ -21,7 +21,7 @@ namespace Metra.Axxess
 
     public class ReadyReport : OutputReport
     {
-        public ReadyReport(IAxxessDevice dev) : base((HIDDevice)dev)
+        public ReadyReport(IAxxessBoard dev) : base((HIDDevice)dev)
         {
             this.SetBuffer(dev.ReadyPacket);
         }
@@ -29,7 +29,7 @@ namespace Metra.Axxess
 
     public class GenericReport : OutputReport
     {
-        public GenericReport(IAxxessDevice dev, byte[] packet) : base((HIDDevice)dev)
+        public GenericReport(IAxxessBoard dev, byte[] packet) : base((HIDDevice)dev)
         {
             this.SetBuffer(dev.PrepPacket(packet));
         }

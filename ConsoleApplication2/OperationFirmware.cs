@@ -7,12 +7,12 @@ using System.Threading;
 
 namespace Metra.Axxess
 {
-    class FirmwareOperation : Operation
+    class OperationFirmware : Operation
     {
-        public Firmware File { get; private set; }
+        public AxxessFirmware File { get; private set; }
         IEnumerator<byte[]> _fileEnum;
 
-        public FirmwareOperation(IAxxessDevice device, Firmware file) : base(device)
+        public OperationFirmware(IAxxessBoard device, AxxessFirmware file) : base(device)
         {
             this.File = file;
             this._fileEnum = this.File.GetEnumerator();

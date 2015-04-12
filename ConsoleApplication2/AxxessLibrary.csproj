@@ -42,14 +42,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Firmware.cs" />
-    <Compile Include="FirmwareOperation.cs" />
-    <Compile Include="HIDAxxessBoard.cs" />
-    <Compile Include="HIDAxxessReport.cs" />
-    <Compile Include="HIDChecksumBoard.cs" />
+    <Compile Include="AxxessConnector.cs" />
+    <Compile Include="AxxessFirmware.cs" />
+    <Compile Include="OperationFirmware.cs" />
+    <Compile Include="AxxessHIDBoard.cs" />
+    <Compile Include="AxxessReport.cs" />
+    <Compile Include="AxxessHIDCheckBoard.cs" />
     <Compile Include="HIDDevice.cs" />
-    <Compile Include="IAxxessDevice.cs" />
-    <Compile Include="IdleOperation.cs" />
+    <Compile Include="IAxxessBoard.cs" />
+    <Compile Include="OperationIdle.cs" />
     <Compile Include="IOperation.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="Program.cs" />

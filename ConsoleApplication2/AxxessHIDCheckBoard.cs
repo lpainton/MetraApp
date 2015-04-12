@@ -11,9 +11,9 @@ namespace Metra.Axxess
    /// <summary>
     /// Class based implementation of the HID w/ Checksum board
     /// </summary>
-    public class HIDChecksumBoard : HIDAxxessBoard
+    public class AxxessHIDCheckBoard : AxxessHIDBoard
     {
-        public HIDChecksumBoard()
+        public AxxessHIDCheckBoard()
             : base()
         {
             this.Type = BoardType.HIDChecksum;

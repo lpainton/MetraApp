@@ -7,13 +7,13 @@ using System.IO;
 
 namespace Metra.Axxess
 {
-    class Firmware : IEnumerable<byte[]>
+    class AxxessFirmware : IEnumerable<byte[]>
     {
         byte[] _hexFile;
         public int PacketSize { get; private set; }
         public int Count { get { return _hexFile.Length / this.PacketSize; } }
 
-        public Firmware(string path, int packetSize)
+        public AxxessFirmware(string path, int packetSize)
         {
             this._hexFile = File.ReadAllBytes(path);
             this.PacketSize = packetSize;

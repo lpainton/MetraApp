@@ -19,11 +19,11 @@ namespace Metra.Axxess
             const string firmwarePath = "../../data/257291_268_ASWC-USB_V320_wencrypt.hex";
 
             //Console.Out.Write("Test compile\n");
-            HIDChecksumBoard testdev = null;
+            AxxessHIDCheckBoard testdev = null;
             while (true)
             {
                 Console.Out.Write("Fetching device...\n");
-                testdev = (HIDChecksumBoard)HIDDevice.FindDevice(VID, PID, typeof(HIDChecksumBoard));
+                testdev = (AxxessHIDCheckBoard)HIDDevice.FindDevice(VID, PID, typeof(AxxessHIDCheckBoard));
                 String msg = (testdev == null) ? "Device not found!" : "Success!";
                 Console.Out.WriteLine(msg);
 

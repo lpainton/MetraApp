@@ -54,7 +54,7 @@ namespace Metra.Axxess
         }
     }
 
-    interface IAxxessDevice
+    interface IAxxessBoard
     {
         /// <summary>
         /// Stores the numeric product ID for the device
