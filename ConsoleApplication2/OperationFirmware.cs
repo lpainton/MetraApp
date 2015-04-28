@@ -9,10 +9,10 @@ namespace Metra.Axxess
 {
     class OperationFirmware : Operation
     {
-        public AxxessFirmware File { get; private set; }
+        AxxessFirmware File { get; set; }
         IEnumerator<byte[]> _fileEnum;
 
-        public OperationFirmware(IAxxessBoard device, AxxessFirmware file) : base(device)
+        public OperationFirmware(IAxxessBoard device, AxxessFirmware file) : base(device, OperationType.Firmware)
         {
             this.File = file;
             this._fileEnum = this.File.GetEnumerator();
@@ -47,7 +47,8 @@ namespace Metra.Axxess
 
         public void FinalHandler(object sender, EventArgs e)
         {
-            this.Status.Equals(OperationStatus.Finished);
+            this.OperationsCompleted++;
+            this.Status = OperationStatus.Finished;
             this.Dispose();
         }
 

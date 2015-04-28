@@ -37,17 +37,20 @@ namespace Metra.Axxess
     abstract class Operation : IOperation
     {
         public OperationStatus Status { get; protected set; }
+        public OperationType Type { get; protected set; }
         public int OperationsCompleted { get; protected set; }
         public int TotalOperations { get; protected set; }
-        public int Progress { get { return OperationsCompleted / TotalOperations; } }
+        public int Progress { get { return (OperationsCompleted * 100) / TotalOperations; } }
 
         public Thread WorkerThread { get; private set; }
         public ThreadStart WorkerMethod { get; private set; }
 
         public IAxxessBoard Device { get; private set; }
 
-        public Operation(IAxxessBoard device)
+        public Operation(IAxxessBoard device, OperationType type)
         {
+            this.Type = type;
+
             this.WorkerMethod = this.DoWork;
             this.WorkerThread = new Thread(this.WorkerMethod);
 
@@ -88,30 +91,6 @@ namespace Metra.Axxess
         {
             return;
         }
-
-
-        #region Static Methods
-        public IOperation SpawnOperation(OperationType type, OpArgs args)
-        {
-            switch(type)
-            {
-                case OperationType.Download:
-                    return null;
-
-                case OperationType.Idle:
-                    return new OperationIdle(args.Device);
-
-                case OperationType.Firmware:
-                    return new OperationFirmware(args.Device, new AxxessFirmware(args.Path, args.Device.PacketSize));
-
-                case OperationType.Remap:
-                    return null;
-
-                default:
-                    return null;
-            }            
-        }
-        #endregion
     
         #region Explicit IOperation Implementation
         OperationStatus IOperation.Status
@@ -119,9 +98,19 @@ namespace Metra.Axxess
             get { return this.Status; }
         }
 
+        OperationType IOperation.Type
+        {
+            get { return this.Type; }
+        }
+
         int IOperation.Progress
         {
             get { return this.Progress; }
+        }
+
+        Thread IOperation.WorkerThread
+        {
+            get { return this.WorkerThread; }
         }
 
         void IOperation.Start()

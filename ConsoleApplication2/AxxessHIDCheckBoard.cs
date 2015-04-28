@@ -13,13 +13,10 @@ namespace Metra.Axxess
     /// </summary>
     public class AxxessHIDCheckBoard : AxxessHIDBoard
     {
-        public AxxessHIDCheckBoard()
-            : base()
+        public AxxessHIDCheckBoard() : base() { }
+        protected override void Initialize()
         {
             this.Type = BoardType.HIDChecksum;
-            this.PacketSize = 44;
-            this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
-            this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
         }
 
         /// <summary>
@@ -76,20 +73,9 @@ namespace Metra.Axxess
         /// <returns></returns>
         public override byte[] PrepPacket(byte[] packet)
         {
-            byte[] newPacket = new byte[65];
-            byte[] content = base.PrepPacket(packet);
+            byte[] newPacket = base.PrepPacket(packet);
 
-            //Add leading header
-            newPacket[1] = 0x55;
-            newPacket[2] = 0xB0;
-
-            //Content length byte added
-            newPacket[3] = Convert.ToByte(content.Length);
-
-            //Add content bytes
-            for (int i=0; i<content.Length; i++)
-                newPacket[i + 4] = content[i];
-
+            //Append checksum
             byte checksum = new byte();
             foreach (byte b in newPacket)
                 checksum ^= b;

@@ -57,7 +57,7 @@
             // mainProgressBar
             // 
             this.mainProgressBar.Name = "mainProgressBar";
-            this.mainProgressBar.Size = new System.Drawing.Size(100, 16);
+            this.mainProgressBar.Size = new System.Drawing.Size(200, 16);
             this.mainProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             // 
             // mainStatusLabel
@@ -103,6 +103,7 @@
             this.remapButton.TabIndex = 6;
             this.remapButton.Text = "Remap Buttons";
             this.remapButton.UseVisualStyleBackColor = true;
+            this.remapButton.Click += new System.EventHandler(this.remapButton_Click);
             // 
             // fileButton
             // 

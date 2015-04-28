@@ -42,8 +42,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ASWCInfo.cs" />
     <Compile Include="AxxessConnector.cs" />
     <Compile Include="AxxessFirmware.cs" />
+    <Compile Include="OperationFactory.cs" />
     <Compile Include="OperationFirmware.cs" />
     <Compile Include="AxxessHIDBoard.cs" />
     <Compile Include="AxxessReport.cs" />

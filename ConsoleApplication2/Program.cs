@@ -14,7 +14,7 @@ namespace Metra.Axxess
     {
         static void Main(string[] args)
         {
-            const int VID = 1240;
+            /*const int VID = 1240;
             const int PID = 63301;
             const string firmwarePath = "../../data/257291_268_ASWC-USB_V320_wencrypt.hex";
 
@@ -84,7 +84,7 @@ namespace Metra.Axxess
             else
             {
                 return;
-            }  
+            }  */
         }
     }
 }

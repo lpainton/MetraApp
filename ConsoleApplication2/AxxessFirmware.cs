@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Metra.Axxess
 {
-    class AxxessFirmware : IEnumerable<byte[]>
+    public class AxxessFirmware : IEnumerable<byte[]>
     {
         byte[] _hexFile;
         public int PacketSize { get; private set; }

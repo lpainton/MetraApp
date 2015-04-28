@@ -11,17 +11,25 @@ namespace Metra.Axxess
     {
         const int SLEEP_TIME = 100;
 
-        public OperationIdle(IAxxessBoard device) : base(device)
+        public OperationIdle(IAxxessBoard device) : base(device, OperationType.Idle)
         {
-
+            this.TotalOperations = 1;
+            this.OperationsCompleted = 1;
         }
 
         public override void Work()
         {
             base.Work();
 
-            this.Device.SendIntroPacket();
-            Thread.Sleep(SLEEP_TIME);
+            try
+            {
+                this.Device.SendIntroPacket();
+                Thread.Sleep(SLEEP_TIME);
+            }
+            catch (HIDDeviceException e)
+            {
+                this.Stop();
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
-    abstract class AxxessConnector
+    public abstract class AxxessConnector
     {
         /* 1240 63493 USB_DATA_XFER_HID_WITHOUT_CHECKSUM
          * 1240 63301 USB_DATA_XFER_HID_WITH_CHECKSUM
@@ -17,35 +17,35 @@ namespace Metra.Axxess
          * 1155 22352 USB_DATA_XFER_HID_WITHOUT_CHECKSUM*/
         
         //HID w/o checksum
-        static const int HIDNoCheck1PID = 1240;
-        static const int HIDNoCheck1VID = 63493;
-        static const int HIDNoCheck2PID = 1240;
-        static const int HIDNoCheck2VID = 60;
-        static const int HIDNoCheck3PID = 1155;
-        static const int HIDNoCheck3VID = 22352;
+        const int HIDNoCheck1PID = 1240;
+        const int HIDNoCheck1VID = 63493;
+        const int HIDNoCheck2PID = 1240;
+        const int HIDNoCheck2VID = 60;
+        const int HIDNoCheck3PID = 1155;
+        const int HIDNoCheck3VID = 22352;
 
         //HID with checksum
-        static const int HIDChecksumPID = 1240;
-        static const int HIDChecksumVID = 63301;
+        const int HIDChecksumPID = 1240;
+        const int HIDChecksumVID = 63301;
 
         //Misc
-        static const int HID293PID = 1115;
-        static const int HID293VID = 8211;
-        static const int CDCMICROPID = 1240;
-        static const int CDCMICROVID = 223;
-        static const int CDCFTDIPID = 1027;
-        static const int CDCFTDIVID = 24577;
+        const int HID293PID = 1115;
+        const int HID293VID = 8211;
+        const int CDCMICROPID = 1240;
+        const int CDCMICROVID = 223;
+        const int CDCFTDIPID = 1027;
+        const int CDCFTDIVID = 24577;
 
         #region Statics
         public static IAxxessBoard InitiateConnection()
         {
             IAxxessBoard device = (IAxxessBoard)HIDDevice.FindDevice(HIDChecksumPID, HIDChecksumVID, typeof(AxxessHIDCheckBoard));
-            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck1PID, HIDNoCheck1VID, typeof(AxxessHIDCheckBoard)) : device;
-            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck2PID, HIDNoCheck2VID, typeof(AxxessHIDCheckBoard)) : device;
-            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck3PID, HIDNoCheck3VID, typeof(AxxessHIDCheckBoard)) : device;
+            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck1PID, HIDNoCheck1VID, typeof(AxxessHIDBoard)) : device;
+            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck2PID, HIDNoCheck2VID, typeof(AxxessHIDBoard)) : device;
+            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck3PID, HIDNoCheck3VID, typeof(AxxessHIDBoard)) : device;
             device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HID293PID, HID293VID, typeof(AxxessHIDCheckBoard)) : device;
-            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(CDCMICROPID, CDCMICROVID, typeof(AxxessHIDCheckBoard)) : device;
-            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(CDCFTDIPID, CDCFTDIVID, typeof(AxxessHIDCheckBoard)) : device;
+            //device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(CDCMICROPID, CDCMICROVID, typeof(AxxessHIDCheckBoard)) : device;
+            //device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(CDCFTDIPID, CDCFTDIVID, typeof(AxxessHIDCheckBoard)) : device;
 
             return device;
         }

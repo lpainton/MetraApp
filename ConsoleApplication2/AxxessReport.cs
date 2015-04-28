@@ -6,11 +6,6 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
-    /*public class HIDAxxessReport : Report
-    {
-        public HIDAxxessReport(HIDAxxessBoard dev) : base(dev) { }
-    }*/
-
     public class IntroReport : OutputReport
     {
         public IntroReport(IAxxessBoard dev) : base((HIDDevice)dev)
@@ -27,11 +22,31 @@ namespace Metra.Axxess
         }
     }
 
-    public class GenericReport : OutputReport
+    public class ASWCRequestReport : OutputReport
     {
-        public GenericReport(IAxxessBoard dev, byte[] packet) : base((HIDDevice)dev)
+        public ASWCRequestReport(IAxxessBoard dev) : base((HIDDevice)dev)
+        {
+            this.SetBuffer(dev.ASWCRequestPacket);
+        }
+    }
+
+    public class GenericOutputReport : OutputReport
+    {
+        public GenericOutputReport(IAxxessBoard dev, byte[] packet) : base((HIDDevice)dev)
         {
             this.SetBuffer(dev.PrepPacket(packet));
+        }
+    }
+
+    public class AxxessInputReport : InputReport
+    {
+        public AxxessInputReport(IAxxessBoard dev) : base((HIDDevice)dev)
+        {
+        }
+
+        public override void ProcessData()
+        {
+            return;
         }
     }
 }

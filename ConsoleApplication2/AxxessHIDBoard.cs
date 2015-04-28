@@ -10,9 +10,7 @@ using System.Windows.Forms;
 
 namespace Metra.Axxess
 {
-    public delegate bool PacketHandler(byte[] packet);
-
-    public abstract class AxxessHIDBoard : HIDDevice, IAxxessBoard
+    public class AxxessHIDBoard : HIDDevice, IAxxessBoard
     {
         //Board attributes
         public virtual int PacketSize { get; protected set; }
@@ -24,6 +22,7 @@ namespace Metra.Axxess
 
         public byte[] IntroPacket { get; protected set; }
         public byte[] ReadyPacket { get; protected set; }
+        public byte[] ASWCRequestPacket { get; protected set; }
 
         public BoardType Type { get; protected set; }
 
@@ -34,6 +33,18 @@ namespace Metra.Axxess
             this.AppFirmwareVersion = 0;
             this.BootFirmwareVersion = 0;
             this.Status = BoardStatus.Idle;
+
+            this.PacketSize = 44;
+            this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
+            this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
+            this.ASWCRequestPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
+
+            this.Initialize();
+        }
+
+        protected virtual void Initialize()
+        {
+            this.Type = BoardType.HIDNoChecksum;
         }
 
         //Atomic packet operations
@@ -45,12 +56,33 @@ namespace Metra.Axxess
         {
             this.Write(new ReadyReport(this));
         }
-        public virtual byte[] PrepPacket(byte[] packet) { return packet; }
+        public void SendASWCRequestPacket()
+        {
+            this.Write(new ASWCRequestReport(this));
+        }
+        public virtual byte[] PrepPacket(byte[] packet) 
+        {
+            byte[] newPacket = new byte[65];
+            byte[] content = packet;
+
+            //Add leading header
+            newPacket[1] = 0x55;
+            newPacket[2] = 0xB0;
+
+            //Content length byte added
+            newPacket[3] = Convert.ToByte(content.Length);
+
+            //Add content bytes
+            for (int i = 0; i < content.Length; i++)
+                newPacket[i + 4] = content[i];
+
+            return newPacket;
+        }
         protected virtual bool ProcessIntroPacket(byte[] packet) { return false; }
 
         //Event related stuff
-        protected virtual bool IsAck(byte[] packet) { return false; }
-        protected virtual bool IsFinal(byte[] packet) { return false; }
+        public virtual bool IsAck(byte[] packet) { return false; }
+        public virtual bool IsFinal(byte[] packet) { return false; }
 
         /// <summary>
         /// This method is called asynchronously when a packet is received.
@@ -71,15 +103,22 @@ namespace Metra.Axxess
             else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
             else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
         }
+
+        public override InputReport CreateInputReport()
+        {
+            return new AxxessInputReport(this);
+        }
         
         #region Events
         public event IntroEventHandler OnIntro;
         public event AckEventHandler OnAck;
         public event FinalEventHandler OnFinal;
+        public event ASWCInfoHandler OnASWCInfo;
 
         public virtual void OnIntroReceived(EventArgs e) { if (OnIntro != null) OnIntro(this, e); }
         public virtual void OnAckReceived(EventArgs e) { if (OnAck != null) OnAck(this, e); }
         public virtual void OnFinalReceived(EventArgs e) { if (OnFinal != null) OnFinal(this, e); }
+        public virtual void OnASWCInfoReceieved(EventArgs e) { if (OnASWCInfo != null) OnASWCInfo(this, e); }
         #endregion 
 
         #region Explicit IAxxessDevice Implementation
@@ -94,14 +133,30 @@ namespace Metra.Axxess
 
         void IAxxessBoard.SendIntroPacket() { this.SendIntroPacket(); }
         void IAxxessBoard.SendReadyPacket() { this.SendReadyPacket(); }
-        void IAxxessBoard.SendPacket(byte[] packet) { this.Write(new GenericReport(this, packet)); }
-        
+        void IAxxessBoard.SendASWCMappingPacket(ASWCButtonMap map) { throw new NotImplementedException(); }
+        void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
+        void IAxxessBoard.SendPacket(byte[] packet) { this.Write(new GenericOutputReport(this, packet)); }
+
         void IAxxessBoard.AddIntroEvent(IntroEventHandler handler) { this.OnIntro += handler; }
         void IAxxessBoard.RemoveIntroEvent(IntroEventHandler handler) { this.OnIntro -= handler; }
         void IAxxessBoard.AddAckEvent(AckEventHandler handler) { this.OnAck += handler; }
         void IAxxessBoard.RemoveAckEvent(AckEventHandler handler) { this.OnAck -= handler; }
         void IAxxessBoard.AddFinalEvent(FinalEventHandler handler) { this.OnFinal += handler; }
         void IAxxessBoard.RemoveFinalEvent(FinalEventHandler handler) { this.OnFinal -= handler; }
+        void IAxxessBoard.AddRemovedEvent(EventHandler handler) { this.OnDeviceRemoved += handler; }
+        void IAxxessBoard.RemoveRemovedEvent(EventHandler handler) { this.OnDeviceRemoved -= handler; }
+        void IAxxessBoard.AddASWCInfoEvent(ASWCInfoHandler handler) { this.OnASWCInfo += handler; }
+        void IAxxessBoard.RemoveASWCInfoEvent(ASWCInfoHandler handler) { this.OnASWCInfo -= handler; }
+
+        void IAxxessBoard.AddASWCConfimEvent(ASWCConfirmHandler handler)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAxxessBoard.RemoveASWCConfimEvent(ASWCConfirmHandler handler)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
     }

@@ -61,7 +61,14 @@ namespace Metra.Axxess
             }
             if (m_hHandle != IntPtr.Zero)	// Dispose and finalize, get rid of unmanaged resources
             {
-                CloseHandle(m_hHandle);
+                try
+                {
+                    CloseHandle(m_hHandle);
+                }
+                catch (Exception e)
+                {
+                    m_hHandle = IntPtr.Zero;
+                }
             }
         }
         #endregion
@@ -157,7 +164,7 @@ namespace Metra.Axxess
 			{
 				m_oFile.Write(oOutRep.Buffer, 0, oOutRep.BufferLength);
 			}
-			catch(IOException ex)
+			catch(Exception ex)
 			{
 				// The device was removed!
 				throw new HIDDeviceException("Device was removed");
