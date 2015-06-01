@@ -5,6 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
+/*
+ * TODO
+ * 
+ * Change the operation timeout to terminate the thread and report it in the status somehow.
+ */
+
 namespace Metra.Axxess
 {
     public enum OperationStatus
@@ -17,7 +23,7 @@ namespace Metra.Axxess
     public enum OperationType
     {
         Download,
-        Idle,
+        Boot,
         Firmware,
         Remap
     };
@@ -35,17 +41,27 @@ namespace Metra.Axxess
     }
 
     abstract class Operation : IOperation
-    {
+    {    
         public OperationStatus Status { get; protected set; }
         public OperationType Type { get; protected set; }
         public int OperationsCompleted { get; protected set; }
         public int TotalOperations { get; protected set; }
         public int Progress { get { return (OperationsCompleted * 100) / TotalOperations; } }
 
+        //Timeout related properties and methods
+        public int Timeout { get; protected set; }
+        protected int _timeoutCounter;
+        protected int TimeoutCounter { get { return _timeoutCounter; } }
+        protected void ResetTimeout() { _timeoutCounter = 0; }
+        protected void IncrementTimeout() { _timeoutCounter++; }
+        protected bool IsTimedOut { get { return _timeoutCounter >= Timeout; } }
+        protected bool CanTimeOut { get; set; }
+
         public Thread WorkerThread { get; private set; }
         public ThreadStart WorkerMethod { get; private set; }
 
         public IAxxessBoard Device { get; private set; }
+        public Exception Error { get; protected set; }
 
         public Operation(IAxxessBoard device, OperationType type)
         {
@@ -59,6 +75,12 @@ namespace Metra.Axxess
             this.OperationsCompleted = 0;
             this.TotalOperations = 1;
             this.Status = OperationStatus.Ready;
+
+            this._timeoutCounter = 0;
+            this.Timeout = 0;
+            this.CanTimeOut = false;
+
+            this.Error = null;
         }
 
         public virtual void DoWork()
@@ -71,6 +93,15 @@ namespace Metra.Axxess
 
         public virtual void Work()
         {
+            if (Timeout > 0)
+            {
+                if (CanTimeOut && IsTimedOut)
+                {
+                    this.Error = new TimeoutException("Error: The current operation timed out!");
+                    Stop();
+                }                    
+                else IncrementTimeout();
+            }
             return;
         }
 
@@ -108,9 +139,19 @@ namespace Metra.Axxess
             get { return this.Progress; }
         }
 
+        int IOperation.Timeout
+        {
+            get { return this.Timeout; }
+        }
+
         Thread IOperation.WorkerThread
         {
             get { return this.WorkerThread; }
+        }
+
+        Exception IOperation.Error
+        {
+            get { return this.Error; }
         }
 
         void IOperation.Start()

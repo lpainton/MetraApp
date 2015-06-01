@@ -25,15 +25,8 @@ namespace MetraApplication
 
     public partial class FormMain : Form
     {
-        //const string FIRMWARE_FOLDER = "firmware";
-        const string MAPS_FOLDER = "maps";
-        const string CONFIG_FILE = "appconfig.cfg";
-        const string FIRMWARE_ARCHIVE = "firmware.zip";
-        const string FIRMWARE_MANIFEST = "firmware.txt";
-        const string MANIFEST_URL = "http://axxessupdater.com/admin/secure/manifest-request.php";
-        const string BATCH_URL = "http://axxessupdater.com/admin/secure/batch-download.php";
 
-        delegate void ProgressCallback();
+        delegate void UpdateCallback();
 
         //This set of constants represent signals for system messages related to device events
         public const int DbtDeviceArrival = 0x8000; //A new device has been added
@@ -45,8 +38,19 @@ namespace MetraApplication
         public IOperation CurrentOperation { get; private set; }
         System.Windows.Forms.Timer CallbackTimer { get; set; }
 
+        FileManager FManager { get; set; }
+        ErrorManager EManager { get; set; }
+
         public FormMain()
         {
+            EManager = new ErrorManager(this);
+            FManager = new FileManager(EManager);
+            this.FormClosing += new FormClosingEventHandler((s, a) =>
+            {
+                if (this.attachedDevice != null) this.attachedDevice.Dispose();
+                if (this.CurrentOperation != null) this.CurrentOperation.Stop();
+            });
+
             InitializeComponent();
         }
 
@@ -58,7 +62,7 @@ namespace MetraApplication
             CallbackTimer = new System.Windows.Forms.Timer();
             CallbackTimer.Interval = 500;
             CallbackTimer.Start();
-            CallbackTimer.Tick += ProgressUpdate;
+            CallbackTimer.Tick += FormUpdate;
 
             mainStatusLabel.Text = "Initializing";
             mainProgressBar.Value = 0;
@@ -76,23 +80,18 @@ namespace MetraApplication
 
             mainStatusLabel.Text = "File system check";
             mainProgressBar.Value = 30;
-            FileSysCheck();
+            FManager.CreateDirectory(FManager.FirmwareFolder);
+            if (!File.Exists(FManager.FirmwareArchive))
+            {
+                SetupForm sf = new SetupForm(FManager);
+                sf.ShowDialog();
+            }
+
+            FManager.CreateDirectory(FManager.MapFolder);
 
             this.UpdateControls();
             mainStatusLabel.Text = "System ready and waiting for device";
             mainProgressBar.Value = 100;
-        }
-
-        /// <summary>
-        /// Checks if the needed directories/files for the application exist.  If not creates them.
-        /// </summary>
-        private void FileSysCheck()
-        {
-            /*if (!Directory.Exists(".\\" + FIRMWARE_FOLDER))
-                Directory.CreateDirectory(".\\" + FIRMWARE_FOLDER);*/
-            if (!Directory.Exists(".\\" + MAPS_FOLDER))
-                Directory.CreateDirectory(".\\" + MAPS_FOLDER);
-            //if (!File.Exists(CONFIG_FILE))
         }
 
         /// <summary>
@@ -123,22 +122,9 @@ namespace MetraApplication
                     fileButton.Enabled = false;
                     break;
             }
-        }
 
-        private void UpdateBoardInfo()
-        {
-            /*attachedDevice = (HIDChecksumBoard)HIDDevice.FindDevice(VID, PID, typeof(HIDChecksumBoard));
-            if (attachedDevice == null)
-            {
-                connectLabel.Text = "Board ID: -\nFirmware Ver: -";
-                mainStatusLabel.Text = "No board connected";
-            }
-            else
-            {
-                attachedDevice.SpinupIntro();
-                Thread.Sleep(200);
-                connectLabel.Text = "Board ID: " + attachedDevice.ProductID + "\nFirmware Ver: " + attachedDevice.AppFirmwareVersion;
-            }*/
+            //If there's a device then we should be able to get info on it
+            devInfoButton.Enabled = (attachedDevice != null);
         }
 
         private void toolStripStatusLabel1_Click(object sender, EventArgs e)
@@ -152,100 +138,8 @@ namespace MetraApplication
         }
 
         private void updateButton_Click(object sender, EventArgs e)
-        {   
-            if(!IsInternetAvailable())
-            {
-                mainStatusLabel.Text = "Could not connect to the internet!";
-                return;
-            }
-
-            if (!File.Exists(FIRMWARE_ARCHIVE))
-                DownloadFirmware();
-            if (!File.Exists(FIRMWARE_MANIFEST))
-                DownloadManifest();
-
-            if (!CompareManifests())
-                DownloadFirmware();
-
-            string fileName = SearchManifest("CWI" + this.attachedDevice.ProductID.ToString());
-            
-            if (!fileName.Equals(String.Empty))
-            {
-                using (ZipArchive zip = ZipFile.OpenRead(FIRMWARE_ARCHIVE))
-                {
-                    foreach (ZipArchiveEntry entry in zip.Entries)
-                        if (entry.Name == fileName)
-                        {
-                            if (File.Exists("firm.hex"))
-                                File.Delete("firm.hex");
-                            entry.ExtractToFile("firm.hex");
-                        }
-                }
-
-                UpdateFromFile("firm.hex");
-
-            }
-        }
-
-        private bool IsInternetAvailable()
         {
-            mainStatusLabel.Text = "Checking for internet connectivity...";
-
-            Ping myPing = new Ping();
-            String host = "8.8.8.8";
-            byte[] buffer = new byte[32];
-            int timeout = 1000;
-            PingOptions pingOptions = new PingOptions();
-            PingReply reply = myPing.Send(host, timeout, buffer, pingOptions);
-            return (reply.Status == IPStatus.Success);
-        }
-
-        private bool CompareManifests()
-        {
-            using (WebClient wc = new WebClient())
-            {
-                wc.DownloadFile(MANIFEST_URL, "temp");
-            }
-
-            string newManifest = File.ReadAllText("temp");
-            string oldManifest = File.ReadAllText(FIRMWARE_MANIFEST);
-
-            return (newManifest.Equals(oldManifest));
-        }
-
-        private string SearchManifest(string boardID)
-        {
-            foreach (string line in File.ReadAllLines(FIRMWARE_MANIFEST))
-            {
-                string[] entry = line.Split(',');
-                if (entry[0].Equals(boardID))
-                {
-                    return entry[2];
-                }
-            }
-            return String.Empty;
-        }
-
-        private void DownloadFirmware()
-        {
-            mainStatusLabel.Text = "Downloading latest firmware archive...";
-            if (File.Exists(FIRMWARE_ARCHIVE))
-                File.Delete(FIRMWARE_ARCHIVE);
-            using (WebClient wc = new WebClient())
-            {
-                wc.DownloadFile(BATCH_URL, FIRMWARE_ARCHIVE);
-            }
-            mainStatusLabel.Text = "Finshed downloading.";
-        }
-
-        private void DownloadManifest()
-        {
-            mainStatusLabel.Text = "Downloading latest firmware manifest...";
-            using (WebClient wc = new WebClient())
-            {
-                wc.DownloadFile(MANIFEST_URL, FIRMWARE_MANIFEST);
-            }
-            mainStatusLabel.Text = "Finshed downloading.";
+            this.UpdateFromInternet();
         }
 
         /// <summary>
@@ -287,7 +181,7 @@ namespace MetraApplication
             this.attachedDevice = cf.Device;
             if (this.attachedDevice != null)
             {
-                this.CurrentOperation = OperationFactory.SpawnOperation(OperationType.Idle, new OpArgs(this.attachedDevice));
+                this.CurrentOperation = OperationFactory.SpawnOperation(OperationType.Boot, new OpArgs(this.attachedDevice));
                 this.CurrentOperation.Start();
 
                 this.Status = AppStatus.DeviceConnected;
@@ -316,9 +210,36 @@ namespace MetraApplication
             }
         }
 
+        private void UpdateFromInternet()
+        {
+            this.Status = AppStatus.Streaming;
+            if (!File.Exists(FManager.ManifestFile) && FManager.IsInternetAvailable())
+            {
+                FManager.DownloadManifest(FManager.ManifestURL);
+            }
+            
+            while(FManager.Web.IsBusy)
+            {
+                Thread.Sleep(100);
+            }
+
+            string fileName = FManager.SearchManifest(this.attachedDevice.ProductID);
+
+            if (fileName.Equals(String.Empty))
+            {
+                MessageBox.Show("Could not determine a firmware file for the connected device!");
+                this.Status = AppStatus.DeviceConnected;
+            }
+            else
+            {
+                UpdateFromFile(FManager.GetPathToFirmware(fileName));
+            }
+        }
+
         private void UpdateFromFile(string path)
         {
-            if (this.CurrentOperation == null || this.CurrentOperation.Type != OperationType.Idle)
+            //Checkpoint
+            if (this.CurrentOperation == null || !this.CurrentOperation.Type.Equals(OperationType.Boot))
                 return;
 
             this.mainStatusLabel.Text = "Updating app firmware...";
@@ -331,19 +252,9 @@ namespace MetraApplication
             this.Status = AppStatus.Streaming;
             this.UpdateControls();
 
-            //UpdateForm uf = new UpdateForm(this.CurrentOperation);
-            //uf.ShowDialog();
-
-            /*while(this.CurrentOperation.Status.Equals(OperationStatus.Working))
-            {
-                this.mainProgressBar.Value = this.CurrentOperation.Progress;
-                Thread.Sleep(200);
-            }*/
-
-            this.mainStatusLabel.Text = "Firmware update complete";
-
-            this.Status = AppStatus.DeviceConnected;
-            this.UpdateControls();
+            //this.mainStatusLabel.Text = "Firmware update complete";
+            //this.Status = AppStatus.DeviceConnected;
+            //this.UpdateControls();
         }
 
 
@@ -352,28 +263,51 @@ namespace MetraApplication
         /// </summary>
         /// <param name="s">Sender</param>
         /// <param name="e">EventArgs object</param>
-        private void ProgressUpdate(object s, EventArgs e)
+        private void FormUpdate(object s, EventArgs e)
         {
+            UpdateControls();
             UpdateProgress();
+            if (this.CurrentOperation != null)
+                CatchErrors();
+        }
+
+        public void CatchErrors()
+        {
+            if (this.statusStrip1.InvokeRequired)
+            {
+                UpdateCallback p = new UpdateCallback(CatchErrors);
+                this.Invoke(p);
+            }
+            else
+            {
+                if (this.CurrentOperation.Error != null)
+                {
+                    string message = this.CurrentOperation.Error.Message;
+                    this.CurrentOperation = null;
+                    this.Status = AppStatus.NoDevice;
+                    this.attachedDevice.Dispose();
+                    this.attachedDevice = null;
+                    MessageBox.Show(message + "\nPlease reconnect your device.");
+                }
+            }
         }
 
         public void UpdateProgress()
         {
             if (this.statusStrip1.InvokeRequired)
             {
-                ProgressCallback p = new ProgressCallback(UpdateProgress);
+                UpdateCallback p = new UpdateCallback(UpdateProgress);
                 this.Invoke(p);
             }
             else
             {
-                if (this.CurrentOperation != null && !this.CurrentOperation.Equals(OperationType.Idle))
+                if (this.CurrentOperation != null && !this.CurrentOperation.Equals(OperationType.Boot))
                 {
                     if (this.CurrentOperation.Status.Equals(OperationStatus.Working))
                         this.mainStatusLabel.Text = this.CurrentOperation.Type.ToString() + " operation in progress...";
                     else if (this.CurrentOperation.Status.Equals(OperationStatus.Finished))
                         this.mainStatusLabel.Text = this.CurrentOperation.Type.ToString() + " operation completed.";
                     this.mainProgressBar.Value = this.CurrentOperation.Progress;
-                    
                 }
             }
         }
@@ -382,6 +316,11 @@ namespace MetraApplication
         {
             RemapForm rForm = new RemapForm(this);
             rForm.ShowDialog();
+        }
+
+        private void devInfoButton_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(attachedDevice.Info);
         }
     }
 }

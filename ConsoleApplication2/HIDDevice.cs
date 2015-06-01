@@ -153,6 +153,10 @@ namespace Metra.Axxess
                 }
                 Dispose();
             }
+            catch (NullReferenceException ex)
+            {
+
+            }
         }
 		/// <summary>
 		/// Write an output report to the device.

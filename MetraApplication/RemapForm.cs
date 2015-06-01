@@ -28,14 +28,18 @@ namespace MetraApplication
         {
             if (this.MForm.CurrentOperation != null)
             {
-                if (this.MForm.CurrentOperation.Type.Equals(OperationType.Idle))
+                if (this.MForm.CurrentOperation.Type.Equals(OperationType.Boot))
                 {
                     this.MForm.CurrentOperation.Stop();
                     this.MForm.CurrentOperation.WorkerThread.Join();
-                    Thread.Sleep(200);
+                    Thread.Sleep(1000);
                     this.Device.SendASWCRequestPacket();
                 }
-                else
+                else if (!this.MForm.CurrentOperation.Status.Equals(OperationStatus.Working))
+                {
+                    this.Device.SendASWCRequestPacket();
+                }
+                else 
                 {
                     this.Close();
                     return;

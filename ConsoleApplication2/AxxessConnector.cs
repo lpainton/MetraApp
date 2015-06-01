@@ -36,10 +36,17 @@ namespace Metra.Axxess
         const int CDCFTDIPID = 1027;
         const int CDCFTDIVID = 24577;
 
+        const int FTDIMaxSearch = 100;
+        private static readonly uint[] FTDIBaudRates = { 19200, 115200 };
+
         #region Statics
         public static IAxxessBoard InitiateConnection()
         {
-            IAxxessBoard device = (IAxxessBoard)HIDDevice.FindDevice(HIDChecksumPID, HIDChecksumVID, typeof(AxxessHIDCheckBoard));
+            IAxxessBoard device = null;
+            
+            device = (device == null) ? SearchForFTDI() : device;
+
+            device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDChecksumPID, HIDChecksumVID, typeof(AxxessHIDCheckBoard)) : device;
             device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck1PID, HIDNoCheck1VID, typeof(AxxessHIDBoard)) : device;
             device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck2PID, HIDNoCheck2VID, typeof(AxxessHIDBoard)) : device;
             device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck3PID, HIDNoCheck3VID, typeof(AxxessHIDBoard)) : device;
@@ -48,6 +55,24 @@ namespace Metra.Axxess
             //device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(CDCFTDIPID, CDCFTDIVID, typeof(AxxessHIDCheckBoard)) : device;
 
             return device;
+        }
+
+        public static IAxxessBoard SearchForFTDI()
+        {
+            FTDICable myFtdiDevice = new FTDICable();
+            uint devCount = 0;
+            myFtdiDevice.GetNumberOfDevices(ref devCount);
+            if (devCount != 1)
+                return null;
+
+            myFtdiDevice.OpenPortForAxxess(9000);
+            uint rate = 0;
+
+            rate = myFtdiDevice.SearchBaudRate(FTDIBaudRates, FTDIMaxSearch);           
+
+            myFtdiDevice.CloseCommPort();
+
+            return (rate > 0) ? new AxxessFTDIBoard(myFtdiDevice, rate) : null;
         }
         #endregion
     }

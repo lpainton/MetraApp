@@ -7,10 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+//using FTD2XX_NET;
 
 namespace Metra.Axxess
 {
-    public class AxxessHIDBoard : HIDDevice, IAxxessBoard
+    public class AxxessFTDIBoard : IAxxessBoard
     {
         //Board attributes
         public virtual int PacketSize { get; protected set; }
@@ -18,7 +19,7 @@ namespace Metra.Axxess
         public string ProductID { get; protected set; }
         public string AppFirmwareVersion { get; protected set; }
         public string BootFirmwareVersion { get; protected set; }
-        public string Info 
+        public string Info
         {
             get
             {
@@ -26,6 +27,7 @@ namespace Metra.Axxess
                 sb.AppendLine("Product ID: " + this.ProductID);
                 sb.AppendLine("App Ver: " + this.AppFirmwareVersion);
                 sb.AppendLine("Boot Ver: " + this.BootFirmwareVersion);
+                sb.AppendLine("Baud Rate: " + this.BaudRate.ToString());
                 return sb.ToString();
             }
         }
@@ -36,9 +38,12 @@ namespace Metra.Axxess
         public byte[] ASWCRequestPacket { get; protected set; }
 
         public BoardType Type { get; protected set; }
+        public FTDICable FTDIDevice { get; protected set; }
+        public uint BaudRate { get; protected set; }
 
-        public AxxessHIDBoard()
-            : base()
+        public bool StopRead { get; set; }
+
+        public AxxessFTDIBoard(FTDICable connector, uint baudRate)
         {
             this.ProductID = String.Empty;
             this.AppFirmwareVersion = String.Empty;
@@ -46,34 +51,49 @@ namespace Metra.Axxess
             this.Status = BoardStatus.Idle;
 
             this.PacketSize = 44;
-            this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
-            this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
-            this.ASWCRequestPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
+            //01 F0 10 03 A0 01 0F 58 04
+            this.IntroPacket = new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 };
+            this.ReadyPacket = new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 };
+
+            this.FTDIDevice = connector;
+            BaudRate = baudRate;
+
+            StopRead = false;
 
             this.Initialize();
         }
 
         protected virtual void Initialize()
         {
-            this.Type = BoardType.HIDNoChecksum;
+            this.Type = BoardType.FTDI;
+            this.FTDIDevice.OpenPortForAxxess(this.BaudRate);
+            this.BeginAsyncRead();
         }
 
         //Atomic packet operations
+        public void Write(byte[] packet)
+        {
+            uint resp = this.FTDIDevice.WriteToPort(packet);
+            Console.WriteLine("Wrote {0} bytes!", resp);
+            if (resp == 0)
+                throw new IOException("Failed to write to FTDI device!");
+        }
+
         public void SendIntroPacket()
         {
-            this.Write(new IntroReport(this));
+            this.Write(this.IntroPacket);
         }
         public void SendReadyPacket()
         {
-            this.Write(new ReadyReport(this));
+            this.Write(this.ReadyPacket);
         }
         public void SendASWCRequestPacket()
         {
-            this.Write(new ASWCRequestReport(this));
+            throw new NotSupportedException("ASWC protocols are not supported by the board type!");
         }
         public virtual byte[] PrepPacket(byte[] packet) 
         {
-            byte[] newPacket = new byte[65];
+            byte[] newPacket = new byte[44];
             byte[] content = packet;
 
             //Add content bytes
@@ -91,19 +111,29 @@ namespace Metra.Axxess
         protected virtual bool ParseIntroPacket(byte[] packet)
         {
             //Parse packet into characters
-            String content = String.Empty;
+            //Stack<byte> packetStack = new Stack<byte>(packet);
+            StringBuilder sb = new StringBuilder();
             foreach (byte b in packet)
             {
-                content += Convert.ToChar(b);
+                char c = Convert.ToChar(b);
+                if (Char.IsLetterOrDigit(c) || Char.IsWhiteSpace(c))
+                {
+                    sb.Append(c);
+                }
             }
+            string content = sb.ToString();
 
-            if (content.Substring(10, 3).Equals("CWI"))
-            {
-                this.ProductID = content.Substring(10, 9);
-                this.AppFirmwareVersion = content.Substring(29, 3);
-                return true;
-            }
-            else { return false; }
+            if (content.Equals(String.Empty) || !content.Contains("CWI"))
+                return false;
+
+            string[] words = content.Split(new char[] {' ', '\n', '\t'}, StringSplitOptions.RemoveEmptyEntries);
+
+            this.ProductID = words[0];
+            this.BootFirmwareVersion = words[1];
+            if (words.Length > 2)
+                this.AppFirmwareVersion = words[2];
+
+            return true;
         }
         protected virtual bool ProcessIntroPacket(byte[] packet)
         {
@@ -113,13 +143,11 @@ namespace Metra.Axxess
         //Event related stuff
         public virtual bool IsAck(byte[] packet) 
         {
-            return ((packet[4] == 0x41)
-                || (packet[5] == 0x41)
-                || (packet[6] == 0x41));
+            return false;
         }
         public virtual bool IsFinal(byte[] packet) 
-        {
-            return (packet[4] == 0x38);
+        { 
+            return false; 
         }
 
         /// <summary>
@@ -127,24 +155,64 @@ namespace Metra.Axxess
         /// It will forward the packet to the appropriate event handler based on identification
         /// </summary>
         /// <param name="oInRep">The input report containing the packet</param>
-        protected override void HandleDataReceived(InputReport InRep)
+        /// Ack ready to start update: 01 60 01 0F 20 00 CC 04 00
+        /// Ack ready for next: 01 60 39 39 41
+        /// Ack update completed: 01 60 38 38
+        protected virtual void HandleDataReceived(byte[] packet)
         {
-            base.HandleDataReceived(InRep);
-
-            byte[] packet = InRep.Buffer;
+            //byte[] packet = InRep.Buffer;
 
             if (this.ProductID.Equals(String.Empty))
             {
                 if (this.ProcessIntroPacket(packet))
                     this.OnIntroReceived(new PacketEventArgs(packet));
             }
+
             else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
             else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
+            foreach (byte b in packet) { Console.Write("{0} ", Convert.ToChar(b)); }
+            Console.WriteLine();
+
+        }
+        protected virtual void HandleDeviceRemoved()
+        {
+
         }
 
-        public override InputReport CreateInputReport()
+        private void BeginAsyncRead()
         {
-            return new AxxessInputReport(this);
+            if (FTDIDevice.IsPortOpen)
+            {
+                byte[] buffer = new byte[this.PacketSize];
+                FTDIDevice.BeginRead(buffer, ReadCompleted);
+            }
+        }
+        public void ReadCompleted(IAsyncResult result)
+        {
+            try
+            {
+                if (result.IsCompleted)
+                {
+                    HandleDataReceived((byte[])result.AsyncState);
+                }
+                else
+                {
+                    HandleDeviceRemoved();
+                }
+            }
+            finally 
+            {
+                if (!StopRead)
+                {
+                    BeginAsyncRead();
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            if (this.FTDIDevice.IsOpen)
+                this.FTDIDevice.CloseCommPort();
         }
         
         #region Events
@@ -152,6 +220,7 @@ namespace Metra.Axxess
         public event AckEventHandler OnAck;
         public event FinalEventHandler OnFinal;
         public event ASWCInfoHandler OnASWCInfo;
+        public event EventHandler OnDeviceRemoved;
 
         public virtual void OnIntroReceived(EventArgs e) { if (OnIntro != null) OnIntro(this, e); }
         public virtual void OnAckReceived(EventArgs e) { if (OnAck != null) OnAck(this, e); }
@@ -175,7 +244,7 @@ namespace Metra.Axxess
         void IAxxessBoard.SendReadyPacket() { this.SendReadyPacket(); }
         void IAxxessBoard.SendASWCMappingPacket(ASWCButtonMap map) { throw new NotImplementedException(); }
         void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
-        void IAxxessBoard.SendPacket(byte[] packet) { this.Write(new GenericOutputReport(this, packet)); }
+        void IAxxessBoard.SendPacket(byte[] packet) { this.Write(packet); }
 
         void IAxxessBoard.AddIntroEvent(IntroEventHandler handler) { this.OnIntro += handler; }
         void IAxxessBoard.RemoveIntroEvent(IntroEventHandler handler) { this.OnIntro -= handler; }

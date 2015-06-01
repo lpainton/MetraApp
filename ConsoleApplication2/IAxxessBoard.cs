@@ -26,6 +26,7 @@ namespace Metra.Axxess
     {
         HIDChecksum,
         HIDNoChecksum,
+        FTDI
     };
 
     /// <summary>
@@ -61,17 +62,24 @@ namespace Metra.Axxess
         /// <summary>
         /// Stores the numeric product ID for the device
         /// </summary>
-        int ProductID { get; }
+        string ProductID { get; }
 
         /// <summary>
         /// Stores the application firmware version number
         /// </summary>
-        int AppFirmwareVersion { get; }
+        string AppFirmwareVersion { get; }
 
         /// <summary>
         /// Stores the boot firmware version number
         /// </summary>
-        int BootFirmwareVersion { get; }
+        string BootFirmwareVersion { get; }
+
+        /// <summary>
+        /// Gets summary info on the device
+        /// </summary>
+        string Info { get; }
+
+        BoardType Type { get; }
 
         int PacketSize { get; }
 
@@ -141,5 +149,7 @@ namespace Metra.Axxess
         /// </summary>
         void AddASWCConfimEvent(ASWCConfirmHandler handler);
         void RemoveASWCConfimEvent(ASWCConfirmHandler handler);
+
+        void Dispose();
     }
 }

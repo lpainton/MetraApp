@@ -1,6 +1,6 @@
 ﻿namespace MetraApplication
 {
-    partial class UpdateForm
+    partial class SetupForm
     {
         /// <summary>
         /// Required designer variable.
@@ -38,9 +38,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(19, 56);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(106, 13);
+            this.label1.Size = new System.Drawing.Size(86, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Update in Progress...";
+            this.label1.Text = "First time setup...";
             // 
             // okButton
             // 
@@ -59,16 +59,16 @@
             this.progressBar1.Size = new System.Drawing.Size(200, 30);
             this.progressBar1.TabIndex = 3;
             // 
-            // UpdateForm
+            // SetupForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(242, 89);
+            this.ClientSize = new System.Drawing.Size(248, 89);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.label1);
-            this.Name = "UpdateForm";
-            this.Text = "UpdateForm";
+            this.Name = "SetupForm";
+            this.Text = "Application Setup";
             this.Load += new System.EventHandler(this.UpdateForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

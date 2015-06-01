@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Metra.Axxess</RootNamespace>
-    <AssemblyName>ConsoleApplication2</AssemblyName>
+    <AssemblyName>AxxessLibrary</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FTD2XX_NET">
+      <HintPath>FTD2XX_NET_v1.0.14\FTD2XX_NET.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms" />
@@ -42,9 +45,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ASWCInfo.cs" />
+    <Compile Include="ASWCMapping.cs" />
     <Compile Include="AxxessConnector.cs" />
     <Compile Include="AxxessFirmware.cs" />
+    <Compile Include="AxxessFTDIBoard.cs" />
+    <Compile Include="FTDICable.cs" />
     <Compile Include="OperationFactory.cs" />
     <Compile Include="OperationFirmware.cs" />
     <Compile Include="AxxessHIDBoard.cs" />
@@ -52,7 +57,7 @@
     <Compile Include="AxxessHIDCheckBoard.cs" />
     <Compile Include="HIDDevice.cs" />
     <Compile Include="IAxxessBoard.cs" />
-    <Compile Include="OperationIdle.cs" />
+    <Compile Include="OperationBoot.cs" />
     <Compile Include="IOperation.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="Program.cs" />

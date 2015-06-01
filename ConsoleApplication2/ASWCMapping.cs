@@ -11,7 +11,7 @@ namespace Metra.Axxess
 
     }
 
-    public class ASWCInfo
+    public class ASWCMapping
     {
         public int VersionMajor { get; private set; }
         public int VersionMinor { get; private set; }
@@ -24,7 +24,7 @@ namespace Metra.Axxess
         public int StalkOrientation { get; private set; }
 
 
-        public ASWCInfo(byte[] raw)
+        public ASWCMapping(byte[] raw)
         {
         }
 
