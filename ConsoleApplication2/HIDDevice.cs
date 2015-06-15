@@ -171,7 +171,8 @@ namespace Metra.Axxess
 			catch(Exception ex)
 			{
 				// The device was removed!
-				throw new HIDDeviceException("Device was removed");
+				//throw new HIDDeviceException("Device was removed");
+                this.OnDeviceRemoved(this, new EventArgs());
 			}
         }
 		/// <summary>

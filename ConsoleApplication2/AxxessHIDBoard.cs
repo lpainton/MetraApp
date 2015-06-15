@@ -97,17 +97,19 @@ namespace Metra.Axxess
                 content += Convert.ToChar(b);
             }
 
-            if (content.Substring(10, 3).Equals("CWI"))
+            if (content.Substring(7, 3).Equals("CWI"))
             {
-                this.ProductID = content.Substring(10, 9);
-                this.AppFirmwareVersion = content.Substring(29, 3);
+                this.ProductID = content.Substring(7, 12);
+                this.AppFirmwareVersion = content.Substring(26, 3);
                 return true;
             }
             else { return false; }
         }
         protected virtual bool ProcessIntroPacket(byte[] packet)
         {
-            return this.ParseIntroPacket(packet);
+            return (packet[0] == 0x01 && packet[1] == 0x0F &&
+                packet[2] == 0x10 && packet[3] == 0x16 &&
+                packet[4] == 0x1A && this.ParseIntroPacket(packet));
         }        
 
         //Event related stuff

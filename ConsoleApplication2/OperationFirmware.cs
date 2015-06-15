@@ -34,10 +34,24 @@ namespace Metra.Axxess
                     WorkForFTDI();
                     break;
                 
+                case BoardType.HIDThree:
+                    WorkForHID3();
+                    break;
+
                 default:
                     WorkForHID();
                     break;
             }
+        }
+
+        private void WorkForHID3()
+        {
+            //Register events
+            this.Device.AddAckEvent(HID3AckHandler);
+            this.Device.AddFinalEvent(FinalHandler);
+
+            //Send the ready packet and wait for reply
+            this.Device.SendReadyPacket();
         }
 
         private void WorkForHID()
@@ -155,6 +169,22 @@ namespace Metra.Axxess
             {
                 this.Device.SendPacket(_fileEnum.Current);
                 this.OperationsCompleted++;
+            }
+        }
+
+        public void HID3AckHandler(object sender, EventArgs e)
+        {
+            if (this.Status.Equals(OperationStatus.Working))
+            {
+                if (_fileEnum.MoveNext())
+                {
+                    this.Device.SendPacket(_fileEnum.Current);
+                    this.OperationsCompleted++;
+                }
+                else
+                {
+                    this.FinalHandler(sender, e);
+                }
             }
         }
 

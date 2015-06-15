@@ -163,7 +163,14 @@ namespace MetraApplication
                 // after we've done all the processing, 
                 this.Invoke(new MethodInvoker(delegate
                 {
+                    this.attachedDevice.Dispose();
                     this.attachedDevice = null;
+                    if (this.CurrentOperation != null)
+                    {
+                        CurrentOperation.Stop();
+                        CurrentOperation = null;
+                        this.mainProgressBar.Value = 0;
+                    }
 
                     this.Status = AppStatus.NoDevice;
                     this.UpdateControls();
@@ -282,12 +289,19 @@ namespace MetraApplication
             {
                 if (this.CurrentOperation.Error != null)
                 {
-                    string message = this.CurrentOperation.Error.Message;
-                    this.CurrentOperation = null;
-                    this.Status = AppStatus.NoDevice;
-                    this.attachedDevice.Dispose();
-                    this.attachedDevice = null;
-                    MessageBox.Show(message + "\nPlease reconnect your device.");
+                    if (this.CurrentOperation.Error is TimeoutException)
+                    {
+                        this.OnDeviceRemoved(CurrentOperation, new EventArgs());
+                    }
+                    else
+                    {
+                        string message = this.CurrentOperation.Error.Message;
+                        this.CurrentOperation = null;
+                        this.Status = AppStatus.NoDevice;
+                        this.attachedDevice.Dispose();
+                        this.attachedDevice = null;
+                        MessageBox.Show(message + "\nPlease reconnect your device.");
+                    }
                 }
             }
         }

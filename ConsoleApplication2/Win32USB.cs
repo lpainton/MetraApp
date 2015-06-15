@@ -224,6 +224,128 @@ namespace Metra.Axxess
 		/// <param name="hFile">Handle to close</param>
 		/// <returns>True if successful.</returns>
 		[DllImport("kernel32.dll", SetLastError = true)] protected static extern int CloseHandle(IntPtr hFile);
+
+        
+        /*' Retrieves information about a communications error and reports
+        ' the current status of a communications device. The function is
+        ' called when a communications error occurs, and it clears the
+        ' device's error flag to enable additional input and output
+        ' (I/O) operations.
+        '
+        [DllImport("kernel32.dll", SetLastError = true)] protected static extern ClearCommError(IntPtr hFile, long lpErrors, lpStat As COMSTAT) As Long*/
+        /*'
+        ' Closes an open communications device or file handle.
+        '
+        Private Declare Function CloseHandle Lib "kernel32" (ByVal hObject As Long) As Long
+        '
+        ' Creates or opens a communications resource and returns a handle
+        ' that can be used to access the resource.
+        '
+        Private Declare Function CreateFile Lib "kernel32" Alias "CreateFileA" _
+            (ByVal lpFileName As String, ByVal dwDesiredAccess As Long, _
+            ByVal dwShareMode As Long, lpSecurityAttributes As Any, _
+            ByVal dwCreationDisposition As Long, ByVal dwFlagsAndAttributes As Long, _
+            ByVal hTemplateFile As Long) As Long
+        '
+        ' Directs a specified communications device to perform a function.
+        '
+        Private Declare Function EscapeCommFunction Lib "kernel32" _
+            (ByVal nCid As Long, ByVal nFunc As Long) As Long
+        '
+        ' Formats a message string such as an error string returned
+        ' by anoher function.
+        '
+        Private Declare Function FormatMessage Lib "kernel32" Alias "FormatMessageA" _
+            (ByVal dwFlags As Long, lpSource As Any, ByVal dwMessageId As Long, _
+            ByVal dwLanguageId As Long, ByVal lpBuffer As String, ByVal nSize As Long, _
+            Arguments As Long) As Long
+        '
+        ' Retrieves modem control-register values.
+        '
+        Private Declare Function GetCommModemStatus Lib "kernel32" _
+            (ByVal hFile As Long, lpModemStat As Long) As Long
+        '
+        ' Retrieves the current control settings for a specified
+        ' communications device.
+        '
+        Private Declare Function GetCommState Lib "kernel32" _
+            (ByVal nCid As Long, lpDCB As DCB) As Long
+        '
+        ' Retrieves the calling thread's last-error code value.
+        '
+        Private Declare Function GetLastError Lib "kernel32" () As Long
+        '
+        ' Retrieves the results of an overlapped operation on the
+        ' specified file, named pipe, or communications device.
+        '
+        Private Declare Function GetOverlappedResult Lib "kernel32" _
+            (ByVal hFile As Long, lpOverlapped As OVERLAPPED, _
+            lpNumberOfBytesTransferred As Long, ByVal bWait As Long) As Long
+        '
+        ' Discards all characters from the output or input buffer of a
+        ' specified communications resource. It can also terminate
+        ' pending read or write operations on the resource.
+        '
+        Private Declare Function PurgeComm Lib "kernel32" _
+            (ByVal hFile As Long, ByVal dwFlags As Long) As Long
+        '
+        ' Reads data from a file, starting at the position indicated by the
+        ' file pointer. After the read operation has been completed, the
+        ' file pointer is adjusted by the number of bytes actually read,
+        ' unless the file handle is created with the overlapped attribute.
+        ' If the file handle is created for overlapped input and output
+        ' (I/O), the application must adjust the position of the file pointer
+        ' after the read operation.
+        '
+        'Private Declare Function ReadFile Lib "kernel32" _
+        '    (ByVal hFile As Long, ByVal lpBuffer As String, _
+        '    ByVal nNumberOfBytesToRead As Long, ByRef lpNumberOfBytesRead As Long, _
+        '    lpOverlapped As OVERLAPPED) As Long
+    
+        Private Declare Function ReadFile Lib "kernel32" _
+            (ByVal hFile As Long, ByVal lpBuffer As Any, _
+            ByVal nNumberOfBytesToRead As Long, ByRef lpNumberOfBytesRead As Long, _
+            lpOverlapped As OVERLAPPED) As Long
+    
+        '
+        ' Configures a communications device according to the specifications
+        ' in a device-control block (a DCB structure). The function
+        ' reinitializes all hardware and control settings, but it does not
+        ' empty output or input queues.
+        '
+        Private Declare Function SetCommState Lib "kernel32" _
+            (ByVal hCommDev As Long, lpDCB As DCB) As Long
+        '
+        ' Sets the time-out parameters for all read and write operations on a
+        ' specified communications device.
+        '
+        Private Declare Function SetCommTimeouts Lib "kernel32" _
+            (ByVal hFile As Long, lpCommTimeouts As COMMTIMEOUTS) As Long
+        '
+        ' Initializes the communications parameters for a specified
+        ' communications device.
+        '
+        Private Declare Function SetupComm Lib "kernel32" _
+            (ByVal hFile As Long, ByVal dwInQueue As Long, ByVal dwOutQueue As Long) As Long
+        '
+        ' Writes data to a file and is designed for both synchronous and a
+        ' synchronous operation. The function starts writing data to the file
+        ' at the position indicated by the file pointer. After the write
+        ' operation has been completed, the file pointer is adjusted by the
+        ' number of bytes actually written, except when the file is opened with
+        ' FILE_FLAG_OVERLAPPED. If the file handle was created for overlapped
+        ' input and output (I/O), the application must adjust the position of
+        ' the file pointer after the write operation is finished.
+        '
+        'Private Declare Function WriteFile Lib "kernel32" _
+        '    (ByVal hFile As Long, ByVal lpBuffer As String, _
+        '    ByVal nNumberOfBytesToWrite As Long, lpNumberOfBytesWritten As Long, _
+        '    lpOverlapped As OVERLAPPED) As Long
+    
+        Private Declare Function WriteFile Lib "kernel32" _
+            (ByVal hFile As Long, ByVal lpBuffer As Any, _
+            ByVal nNumberOfBytesToWrite As Long, lpNumberOfBytesWritten As Long, _
+            lpOverlapped As OVERLAPPED) As Long*/
         #endregion
 
 		#region Public methods

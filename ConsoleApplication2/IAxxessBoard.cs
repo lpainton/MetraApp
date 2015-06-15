@@ -26,6 +26,8 @@ namespace Metra.Axxess
     {
         HIDChecksum,
         HIDNoChecksum,
+        HIDThree,
+        MicrochipCDC,
         FTDI
     };
 

@@ -31,6 +31,29 @@ namespace Metra.Axxess
             return (packet[4] == 0x38);
         }
 
+        protected override bool ParseIntroPacket(byte[] packet)
+        {
+            //Parse packet into characters
+            String content = String.Empty;
+            foreach (byte b in packet)
+            {
+                content += Convert.ToChar(b);
+            }
+
+            if (content.Substring(10, 3).Equals("CWI"))
+            {
+                this.ProductID = content.Substring(10, 9);
+                this.AppFirmwareVersion = content.Substring(29, 3);
+                return true;
+            }
+            else { return false; }
+        }
+
+        protected override bool ProcessIntroPacket(byte[] packet)
+        {
+            return ParseIntroPacket(packet);
+        }
+
         /// <summary>
         /// Takes a packet and prepares it for transmission to the board.  Adds leading bytes, padding and checksum.
         /// </summary>

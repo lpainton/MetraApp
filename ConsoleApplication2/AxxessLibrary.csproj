@@ -49,6 +49,7 @@
     <Compile Include="AxxessConnector.cs" />
     <Compile Include="AxxessFirmware.cs" />
     <Compile Include="AxxessFTDIBoard.cs" />
+    <Compile Include="AxxessHID3Board.cs" />
     <Compile Include="FTDICable.cs" />
     <Compile Include="OperationFactory.cs" />
     <Compile Include="OperationFirmware.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report.cs" />
+    <Compile Include="Util.cs" />
     <Compile Include="Win32USB.cs" />
   </ItemGroup>
   <ItemGroup>
