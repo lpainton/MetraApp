@@ -37,6 +37,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -50,6 +52,8 @@
     <Compile Include="AxxessFirmware.cs" />
     <Compile Include="AxxessFTDIBoard.cs" />
     <Compile Include="AxxessHID3Board.cs" />
+    <Compile Include="AxxessCDCBoard.cs" />
+    <Compile Include="CDCDevice.cs" />
     <Compile Include="FTDICable.cs" />
     <Compile Include="OperationFactory.cs" />
     <Compile Include="OperationFirmware.cs" />
@@ -70,6 +74,9 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="data\257291_268_ASWC-USB_V320_wencrypt.hex" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

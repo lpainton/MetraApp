@@ -38,10 +38,132 @@ namespace Metra.Axxess
                     WorkForHID3();
                     break;
 
+                case BoardType.MicrochipCDC:
+                    WorkForCDC();
+                    break;
+
                 default:
                     WorkForHID();
                     break;
             }
+        }
+
+        private void WorkForCDC()
+        {
+            Timeout = 10;
+            _timeoutCounter = 0;
+            CanTimeOut = true;
+
+            //Register events
+            //this.Device.AddAckEvent(AckHandler);
+            //this.Device.AddFinalEvent(FinalHandler);
+
+            AxxessCDCBoard board = (AxxessCDCBoard)Device;
+
+            //Turns off the board's built in async read so that we can 
+            board.StopRead = true;
+            //board.Port.DiscardInBuffer();
+            //board.Port.DiscardOutBuffer();
+            //board.Port.Open();
+            Thread.Sleep(100);
+            
+            //Wait for ACK byte
+            Timeout = 10;
+            _timeoutCounter = 0;
+
+            board.SendReadyPacket();
+            while (!IsTimedOut)
+            {
+                //Thread.Sleep(100);
+                try
+                {
+                    int bytes = board.Port.BytesToRead;
+                    if (bytes > 0)
+                    {
+                        byte[] buffer = new byte[bytes];
+                        board.Port.Read(buffer, 0, bytes);
+                        foreach (byte b in buffer)
+                        {
+                            Console.Write("{0} ", b);
+                            if (b == 0x41)
+                            {
+                                //Console.WriteLine("Ack!");
+                                goto filetrans;
+                            }
+
+                        }
+                        Console.WriteLine();
+                    }
+                }
+                catch (TimeoutException)
+                {
+                    IncrementTimeout();
+                }
+
+            }
+            if (IsTimedOut)
+            {
+                Error = new TimeoutException("Firmware operation did not receive an ack from the board!");
+                this.Stop();
+                return;
+            }
+
+            
+            //Send packets in 44 byte chunks
+            filetrans:
+            while (this.Status.Equals(OperationStatus.Working) && this._fileEnum.MoveNext())
+            {
+                bool ackRX = false;
+                board.Write(_fileEnum.Current);
+                OperationsCompleted++;
+                //Thread.Sleep(100);
+                Timeout = 10;
+                _timeoutCounter = 0;
+
+                while (!ackRX && !IsTimedOut)
+                {
+                    try
+                    {
+                        int bytes = board.Port.BytesToRead;
+                        if (bytes > 0)
+                        {
+                            byte[] buffer = new byte[bytes];
+                            board.Port.Read(buffer, 0, bytes);
+                            foreach (byte b in buffer)
+                            {
+                                Console.Write("{0} ", b);
+                                if (b == 0x41)
+                                {
+                                    //Console.WriteLine("Ack!");
+                                    ackRX = true;
+                                    break;
+                                }
+                                else if (b == 0x38)
+                                {
+                                    //Console.WriteLine("Final!");
+                                    goto endtrans;
+                                }
+
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+                    catch (TimeoutException)
+                    {
+                        IncrementTimeout();
+                    }
+                }
+                if (IsTimedOut)
+                {
+                    Error = new TimeoutException("Firmware operation did not receive transfer ack from the board!");
+                    this.Stop();
+                    return;
+                }
+            }
+
+        endtrans:
+            this.Stop();
+
         }
 
         private void WorkForHID3()
@@ -169,6 +291,22 @@ namespace Metra.Axxess
             {
                 this.Device.SendPacket(_fileEnum.Current);
                 this.OperationsCompleted++;
+            }
+        }
+
+        public void CDCAckHandler(object sender, EventArgs e)
+        {
+            if (this.Status.Equals(OperationStatus.Working))
+            {
+                if (_fileEnum.MoveNext())
+                {
+                    this.Device.SendPacket(_fileEnum.Current);
+                    this.OperationsCompleted++;
+                }
+                else
+                {
+                    this.FinalHandler(sender, e);
+                }
             }
         }
 

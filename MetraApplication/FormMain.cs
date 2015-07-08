@@ -204,7 +204,7 @@ namespace MetraApplication
         {
             OpenFileDialog fileDialog = new OpenFileDialog();
             
-            fileDialog.Filter = "Hex files (.hex) | *.hex";
+            //fileDialog.Filter = "Hex files (.hex) | *.hex";
             fileDialog.FilterIndex = 1;
 
             fileDialog.Multiselect = false;

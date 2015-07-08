@@ -51,7 +51,7 @@ namespace Metra.Axxess
             device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck2PID, HIDNoCheck2VID, typeof(AxxessHIDBoard)) : device;
             device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HIDNoCheck3PID, HIDNoCheck3VID, typeof(AxxessHIDBoard)) : device;
             device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(HID293PID, HID293VID, typeof(AxxessHID3Board)) : device;
-            //device = (device == null) ? (IAxxessBoard)HIDDevice.FindDevice(CDCMICROPID, CDCMICROVID, typeof(AxxessHIDCheckBoard)) : device;
+            device = (device == null) ? (IAxxessBoard)CDCDevice.FindDevice(CDCMICROPID, CDCMICROVID, typeof(AxxessCDCBoard)) : device;
 
             return device;
         }
