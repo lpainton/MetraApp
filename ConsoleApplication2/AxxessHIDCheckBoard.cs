@@ -76,12 +76,18 @@ namespace Metra.Axxess
                 newPacket[i + 4] = content[i];
 
             //Append checksum
-            byte checksum = new byte();
-            foreach (byte b in newPacket)
-                checksum ^= b;
-            newPacket[64] = checksum;
+
+            newPacket[64] = CalculateChecksum(newPacket);
 
             return newPacket;
-        }        
+        }
+
+        public override byte CalculateChecksum(byte[] packet)
+        {
+            byte checksum = new byte();
+            foreach (byte b in packet)
+                checksum ^= b;
+            return checksum;
+        }
     }
 }

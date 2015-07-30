@@ -38,6 +38,14 @@ namespace Metra.Axxess
         }
     }
 
+    public class RawOutputReport : OutputReport
+    {
+        public RawOutputReport(IAxxessBoard dev, byte[] packet) : base((HIDDevice)dev)
+        {
+            this.SetBuffer(packet);
+        }
+    }
+
     public class AxxessInputReport : InputReport
     {
         public AxxessInputReport(IAxxessBoard dev) : base((HIDDevice)dev)

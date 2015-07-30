@@ -89,6 +89,7 @@ namespace Metra.Axxess
         byte[] IntroPacket { get; }
         byte[] ReadyPacket { get; }
         byte[] ASWCRequestPacket { get; }
+        byte CalculateChecksum(byte[] packet);
 
         /// <summary>
         /// Sends an intro packet to the board.
@@ -115,6 +116,12 @@ namespace Metra.Axxess
         /// </summary>
         /// <param name="packet">A raw byte array packet to send.</param>
         void SendPacket(byte[] packet);
+
+        /// <summary>
+        /// Sends the provided packet without processing.
+        /// </summary>
+        /// <param name="packet">The packet to send in raw form.</param>
+        void SendRawPacket(byte[] packet);
 
         /// <summary>
         /// Fired when an intro packet is received from the board.

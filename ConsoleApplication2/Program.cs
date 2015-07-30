@@ -13,68 +13,28 @@ namespace Metra.Axxess
     {
         public static void Main()
         {
-            AxxessCDCBoard board = null;
+            /*byte[] barr = new byte[] { 0x01, 0x0F, 0x10, 0x16, 0x1A, 0x0A, 0x43, 0x57, 0x49, 0x32, 0x35, 0x37, 0x32, 0x36, 0x36, 0x20, 0x20, 
+                0x20, 0x1C, 0x09, 0x33, 0x30, 0x20, 0xFF, 0xFF, 0x31, 0x30, 0x35, 0x00, 0x00, 0x43, 0x57, 0x49, 0x32, 0x35, 0x37, 0x32, 0x36, 0x36,
+                0x20, 0x20, 0x20, 0xFF, 0x04 };
+            List<char> blist = new List<char>();
 
-            while (board == null)
+            for (int i=0; i<barr.Length; i++)
             {
-                board = (AxxessCDCBoard)AxxessConnector.InitiateConnection();
+                Console.WriteLine("{0} -> {1}", i, Convert.ToChar(barr[i]));
             }
+           
+            Console.ReadKey();*/
 
-            board.StopRead = true;
+            AxxessHIDBoard dev = null;
+            while (dev == null)
+                dev = (AxxessHIDBoard)AxxessConnector.InitiateConnection();
+
+            Thread.Sleep(100);
 
             while (true)
             {
-                board.SendIntroPacket();
-                string s = String.Empty;
-                try
-                {
-                    /*int bytes = board.Port.BytesToRead;
-                    byte[] buffer = new byte[bytes];
-                    board.Port.Read(buffer, 0, bytes);
-                    foreach (byte b in buffer)
-                        Console.Write("{0} ", b);
-                    Console.WriteLine();*/
-
-                    s = board.Port.ReadExisting();
-                    Console.WriteLine(s);
-                    if (s.Contains("CWI"))
-                        break;
-                }
-                catch (TimeoutException)
-                {
-                }
-                Thread.Sleep(100);
-            }
-
-            //board.Port.DiscardInBuffer()
-            string t = String.Empty;
-            while (true)
-            {
-                board.SendReadyPacket();
-                try
-                {
-                    int bytes = board.Port.BytesToRead;
-                    if (bytes > 0)
-                    {
-                        byte[] buffer = new byte[bytes];
-                        board.Port.Read(buffer, 0, bytes);
-                        foreach (byte b in buffer)
-                        {
-                            Console.Write("{0} ", b);
-                            if (b == 0x41)
-                            {
-                                Console.WriteLine("Ack!");
-                                break;
-                            }
-
-                        }
-                        Console.WriteLine();
-                    }
-                }
-                catch (TimeoutException)
-                {
-                }
-                Thread.Sleep(100);
+                dev.SendIntroPacket();
+                Thread.Sleep(50);
             }
         }
 

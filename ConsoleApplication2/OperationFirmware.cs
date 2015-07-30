@@ -12,6 +12,9 @@ namespace Metra.Axxess
         AxxessFirmware File { get; set; }
         IEnumerator<byte[]> _fileEnum;
 
+        bool AckRx { get; set; }
+        bool FinalRx { get; set; }
+
         public OperationFirmware(IAxxessBoard device, AxxessFirmware file) : base(device, OperationType.Firmware)
         {
             this.File = file;
@@ -48,6 +51,9 @@ namespace Metra.Axxess
             }
         }
 
+        /// <summary>
+        /// Procedural
+        /// </summary>
         private void WorkForCDC()
         {
             Timeout = 10;
@@ -166,14 +172,53 @@ namespace Metra.Axxess
 
         }
 
+
         private void WorkForHID3()
         {
             //Register events
-            this.Device.AddAckEvent(HID3AckHandler);
-            this.Device.AddFinalEvent(FinalHandler);
+            this.Device.AddAckEvent(AckRxHandler);
+            this.Device.AddFinalEvent(FinalRxHandler);
 
-            //Send the ready packet and wait for reply
+            //Send the ready packet and wait for reply 
             this.Device.SendReadyPacket();
+
+            //Wait for Rx
+            while (this.File.Index < (this.File.Count - 2) && this.Status.Equals(OperationStatus.Working))
+            {
+                while (!this.AckRx && this.Status.Equals(OperationStatus.Working))
+                {
+                    //Thread.Sleep(10);
+                }
+                
+                _fileEnum.MoveNext();
+                this.ResetFlags();
+                this.Device.SendPacket(_fileEnum.Current);
+                this.OperationsCompleted++;
+            }
+
+            while (!this.AckRx && this.Status.Equals(OperationStatus.Working))
+            {
+                //Thread.Sleep(10);
+            }
+
+            if (this.Status.Equals(OperationStatus.Working))
+            {
+                _fileEnum.MoveNext();
+                this.OperationsCompleted++;
+                byte[] packet = new byte[65];
+                byte[] content = _fileEnum.Current;
+                for (int i = 0; i < content.Length; i++)
+                {
+                    packet[i + 2] = content[i];
+                }
+                packet[1] = 0xFF;
+                packet[64] = this.Device.CalculateChecksum(content);
+                this.Device.SendRawPacket(packet);
+
+                this.OperationsCompleted++;
+                this.Status = OperationStatus.Finished;
+            }
+            this.Dispose();
         }
 
         private void WorkForHID()
@@ -310,22 +355,6 @@ namespace Metra.Axxess
             }
         }
 
-        public void HID3AckHandler(object sender, EventArgs e)
-        {
-            if (this.Status.Equals(OperationStatus.Working))
-            {
-                if (_fileEnum.MoveNext())
-                {
-                    this.Device.SendPacket(_fileEnum.Current);
-                    this.OperationsCompleted++;
-                }
-                else
-                {
-                    this.FinalHandler(sender, e);
-                }
-            }
-        }
-
         public void FinalHandler(object sender, EventArgs e)
         {
             this.OperationsCompleted++;
@@ -342,6 +371,28 @@ namespace Metra.Axxess
                 this.Device.RemoveAckEvent(AckHandler);
                 this.Device.RemoveFinalEvent(FinalHandler);
             }
+            else if (Device.Type.Equals(BoardType.HIDThree))
+            {
+                this.Device.RemoveAckEvent(AckRxHandler);
+                this.Device.RemoveFinalEvent(FinalRxHandler);
+            }
+        }
+
+        //Flag events
+        public void AckRxHandler(object sender, EventArgs e)
+        {
+            this.AckRx = true;
+        }
+
+        public void FinalRxHandler(object sender, EventArgs e)
+        {
+            this.FinalRx = true;
+        }
+
+        public void ResetFlags()
+        {
+            this.AckRx = false;
+            this.FinalRx = false;
         }
     }
 }

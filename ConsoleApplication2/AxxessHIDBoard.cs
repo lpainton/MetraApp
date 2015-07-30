@@ -97,17 +97,17 @@ namespace Metra.Axxess
                 content += Convert.ToChar(b);
             }
 
-            if (content.Substring(7, 3).Equals("CWI"))
+            if (content.Substring(6, 3).Equals("CWI"))
             {
-                this.ProductID = content.Substring(7, 12);
-                this.AppFirmwareVersion = content.Substring(26, 3);
+                this.ProductID = content.Substring(6, 9);
+                this.AppFirmwareVersion = content.Substring(20, 2);
                 return true;
             }
             else { return false; }
         }
         protected virtual bool ProcessIntroPacket(byte[] packet)
         {
-            return (packet[0] == 0x01 && packet[1] == 0x0F &&
+            return (packet[0] == 0x01 && packet[2] == 0x0F &&
                 packet[2] == 0x10 && packet[3] == 0x16 &&
                 packet[4] == 0x1A && this.ParseIntroPacket(packet));
         }        
@@ -134,6 +134,12 @@ namespace Metra.Axxess
             base.HandleDataReceived(InRep);
 
             byte[] packet = InRep.Buffer;
+            /*if (packet.Length > 0)
+            {
+                foreach (byte b in packet)
+                    Console.Write("{0}, ", Convert.ToInt32(b));
+                Console.WriteLine();
+            }*/
 
             if (this.ProductID.Equals(String.Empty))
             {
@@ -147,6 +153,11 @@ namespace Metra.Axxess
         public override InputReport CreateInputReport()
         {
             return new AxxessInputReport(this);
+        }
+
+        public virtual byte CalculateChecksum(byte[] packet)
+        {
+            return 0x00;
         }
         
         #region Events
@@ -178,6 +189,8 @@ namespace Metra.Axxess
         void IAxxessBoard.SendASWCMappingPacket(ASWCButtonMap map) { throw new NotImplementedException(); }
         void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
         void IAxxessBoard.SendPacket(byte[] packet) { this.Write(new GenericOutputReport(this, packet)); }
+        void IAxxessBoard.SendRawPacket(byte[] packet) { this.Write(new RawOutputReport(this, packet)); }
+        byte IAxxessBoard.CalculateChecksum(byte[] packet) { return this.CalculateChecksum(packet); }
 
         void IAxxessBoard.AddIntroEvent(IntroEventHandler handler) { this.OnIntro += handler; }
         void IAxxessBoard.RemoveIntroEvent(IntroEventHandler handler) { this.OnIntro -= handler; }

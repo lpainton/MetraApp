@@ -51,7 +51,7 @@
     <Compile Include="AxxessConnector.cs" />
     <Compile Include="AxxessFirmware.cs" />
     <Compile Include="AxxessFTDIBoard.cs" />
-    <Compile Include="AxxessHID3Board.cs" />
+    <Compile Include="AxxessHID293Board.cs" />
     <Compile Include="AxxessCDCBoard.cs" />
     <Compile Include="CDCDevice.cs" />
     <Compile Include="FTDICable.cs" />

@@ -214,6 +214,11 @@ namespace Metra.Axxess
             if (this.FTDIDevice.IsOpen)
                 this.FTDIDevice.CloseCommPort();
         }
+
+        public virtual byte CalculateChecksum(byte[] packet)
+        {
+            return 0x00;
+        }
         
         #region Events
         public event IntroEventHandler OnIntro;
@@ -245,6 +250,8 @@ namespace Metra.Axxess
         void IAxxessBoard.SendASWCMappingPacket(ASWCButtonMap map) { throw new NotImplementedException(); }
         void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
         void IAxxessBoard.SendPacket(byte[] packet) { this.Write(packet); }
+        void IAxxessBoard.SendRawPacket(byte[] packet) { this.Write(packet); }
+        byte IAxxessBoard.CalculateChecksum(byte[] packet) { return this.CalculateChecksum(packet); }
 
         void IAxxessBoard.AddIntroEvent(IntroEventHandler handler) { this.OnIntro += handler; }
         void IAxxessBoard.RemoveIntroEvent(IntroEventHandler handler) { this.OnIntro -= handler; }
