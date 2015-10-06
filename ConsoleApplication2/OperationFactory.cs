@@ -20,7 +20,7 @@ namespace Metra.Axxess
                     return new OperationBoot(args.Device);
 
                 case OperationType.Firmware:
-                    return new OperationFirmware(args.Device, new AxxessFirmware(args.Path, args.Device.PacketSize));
+                    return new OperationFirmware(args.Device, new AxxessFirmware(args.Path, args.Device.PacketSize, args.Token));
 
                 case OperationType.Remap:
                     return null;

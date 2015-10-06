@@ -9,29 +9,8 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Security.AccessControl;
 
-namespace MetraApplication
+namespace MetraWPFBrowserApp
 {
-
-    #region Exceptions
-    public class NoInternetMAE : MetraApplicationException
-    {
-        public Uri Address { get; private set; }
-
-        public NoInternetMAE(Uri address)
-            : base(@"No internet connection detected!")
-        {
-            this.Address = address;
-        }
-    }
-    public class FirmwareFolderValidationFailureMAE : MetraApplicationException 
-    {
-        public FirmwareFolderValidationFailureMAE()
-            : base(@"Firmware folder failed validation check!")
-        {
-        }
-    }
-    #endregion
-
     /// <summary>
     /// Class incapsulates the status of and management of file system and internet operations for the application.
     /// </summary>
@@ -54,7 +33,7 @@ namespace MetraApplication
 
         public WebClient Web { get; set; }
 
-        public FileManager(ErrorManager Eman)
+        public FileManager()
         {
             FirmwareFolder = FIRMWARE_FOLDER;
             MapFolder = MAPS_FOLDER;
@@ -72,7 +51,15 @@ namespace MetraApplication
         {
             if (!Directory.Exists(path))
             {
-                throw new FirmwareFolderValidationFailureMAE();
+                throw new DirectoryNotFoundException("Firmware directory null or missing.");
+            }
+        }
+
+        public void ValidateFile(string path)
+        {
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("Missing file at " + path);
             }
         }
 
@@ -134,7 +121,7 @@ namespace MetraApplication
         public void DownloadArchive(string url)
         {
             if (!IsInternetAvailable())
-                throw new NoInternetMAE(new Uri(url));
+                throw new EndOfStreamException("Could not access resource at" + url + ".");
 
             //mainStatusLabel.Text = "Downloading latest firmware archive...";
             Web.DownloadFileAsync(new Uri(url), FirmwareArchive);
@@ -145,7 +132,7 @@ namespace MetraApplication
         public void DownloadManifest(string url)
         {
             if (!IsInternetAvailable())
-                throw new NoInternetMAE(new Uri(url));
+                throw new EndOfStreamException("Could not access resource at" + url + ".");
 
             //mainStatusLabel.Text = "Downloading latest firmware manifest...";
             Web.DownloadFileAsync(new Uri(url), ManifestFile);

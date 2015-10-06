@@ -31,6 +31,8 @@ namespace Metra.Axxess
         {
             base.Work();
 
+            this.Message = "Updating to firmware version " + this.File.Version;
+
             switch (Device.Type)
             {
                 case BoardType.FTDI:
@@ -365,6 +367,8 @@ namespace Metra.Axxess
         public override void Dispose()
         {
             base.Dispose();
+
+            this.Message = "Update to firmware version " + this.File.Version + " completed.";
 
             if (Device.Type.Equals(BoardType.HIDChecksum) || Device.Type.Equals(BoardType.HIDNoChecksum))
             {

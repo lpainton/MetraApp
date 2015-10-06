@@ -6,36 +6,53 @@ using System.Management;
 
 namespace Metra.Axxess
 {
-    //Settings: baud=115200 parity=N data=8 stop=1
-    //Intro? 01 F0 10 03 A0 01 0F 58 04
-    //Ready: 01 F0 20 00 EB 04
+    //0, 1, 15, 32, 0, 204, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    //0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     class Program
     {
         public static void Main()
         {
-            /*byte[] barr = new byte[] { 0x01, 0x0F, 0x10, 0x16, 0x1A, 0x0A, 0x43, 0x57, 0x49, 0x32, 0x35, 0x37, 0x32, 0x36, 0x36, 0x20, 0x20, 
-                0x20, 0x1C, 0x09, 0x33, 0x30, 0x20, 0xFF, 0xFF, 0x31, 0x30, 0x35, 0x00, 0x00, 0x43, 0x57, 0x49, 0x32, 0x35, 0x37, 0x32, 0x36, 0x36,
-                0x20, 0x20, 0x20, 0xFF, 0x04 };
-            List<char> blist = new List<char>();
+            /*byte[] array = new byte[] { 0x00, 0x55, 0xB0, 0x09, 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00 };*/
 
-            for (int i=0; i<barr.Length; i++)
-            {
-                Console.WriteLine("{0} -> {1}", i, Convert.ToChar(barr[i]));
-            }
-           
-            Console.ReadKey();*/
+            byte[] array = new byte[] { 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 };
 
-            AxxessHIDBoard dev = null;
+            //Console.WriteLine(array.Length);
+
+            IAxxessBoard dev = null;
             while (dev == null)
-                dev = (AxxessHIDBoard)AxxessConnector.InitiateConnection();
-
-            Thread.Sleep(100);
-
-            while (true)
             {
-                dev.SendIntroPacket();
-                Thread.Sleep(50);
+                dev = AxxessConnector.InitiateConnection();
+                Thread.Sleep(100);
             }
+
+            byte[] newArray = array;
+            Console.WriteLine("Sending intro packet!");
+            dev.SendIntroPacket();
+            //newArray[64] = dev.CalculateChecksum(array);
+            //Console.WriteLine(newArray.Length);
+
+            //Console.WriteLine(dev is AxxessHIDCheckBoard);
+            //Console.WriteLine(dev is AxxessHIDBoard);
+
+            Thread.Sleep(1000);
+
+            while (dev.ASWCInformation == null)
+            {
+                Thread.Sleep(1000);
+                //Console.ReadKey();
+                Console.WriteLine("Sending ASCW request.");
+                //dev.SendRawPacket(newArray);
+                dev.SendASWCRequestPacket();
+            }
+
+            Console.WriteLine(dev.ASWCInformation.ToString());
+            Console.ReadKey();
         }
 
     }

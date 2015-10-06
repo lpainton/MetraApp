@@ -17,8 +17,30 @@ namespace Metra.Axxess
         public virtual int PacketSize { get; protected set; }
 
         public string ProductID { get; protected set; }
-        public string AppFirmwareVersion { get; protected set; }
-        public string BootFirmwareVersion { get; protected set; }
+        public string AppFirmwareVersion
+        {
+            get
+            {
+                return _appVer.ToString();
+            }
+            protected set
+            {
+                _appVer = new AxxessFirmwareVersion(value);
+            }
+        }
+        AxxessFirmwareVersion _appVer;
+        public string BootFirmwareVersion
+        {
+            get
+            {
+                return _bootVer.ToString();
+            }
+            protected set
+            {
+                _bootVer = new AxxessFirmwareVersion(value);
+            }
+        }
+        AxxessFirmwareVersion _bootVer;
         public string Info
         {
             get
@@ -238,6 +260,7 @@ namespace Metra.Axxess
         string IAxxessBoard.AppFirmwareVersion { get { return this.AppFirmwareVersion; } }
         string IAxxessBoard.BootFirmwareVersion { get { return this.BootFirmwareVersion; } }
         string IAxxessBoard.Info { get { return this.Info; } }
+        ASWCInfo IAxxessBoard.ASWCInformation { get { throw new NotImplementedException(); } }
         BoardType IAxxessBoard.Type { get { return this.Type; } }
         int IAxxessBoard.PacketSize { get { return this.PacketSize; } }
 
@@ -247,7 +270,7 @@ namespace Metra.Axxess
 
         void IAxxessBoard.SendIntroPacket() { this.SendIntroPacket(); }
         void IAxxessBoard.SendReadyPacket() { this.SendReadyPacket(); }
-        void IAxxessBoard.SendASWCMappingPacket(ASWCButtonMap map) { throw new NotImplementedException(); }
+        void IAxxessBoard.SendASWCMappingPacket(ASWCInfo map) { throw new NotImplementedException(); }
         void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
         void IAxxessBoard.SendPacket(byte[] packet) { this.Write(packet); }
         void IAxxessBoard.SendRawPacket(byte[] packet) { this.Write(packet); }

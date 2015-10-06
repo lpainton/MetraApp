@@ -30,6 +30,12 @@ namespace Metra.Axxess
         {
             return (packet[4] == 0x38);
         }
+        public override bool IsASWCRead(byte[] packet)
+        {
+            return packet[4] == 0x01
+                && packet[5] == 0x0F
+                && packet[6] == 0xA0;
+        }
 
         protected override bool ParseIntroPacket(byte[] packet)
         {
@@ -88,6 +94,13 @@ namespace Metra.Axxess
             foreach (byte b in packet)
                 checksum ^= b;
             return checksum;
+        }
+
+        protected override void ProcessASWCPacket(byte[] packet)
+        {
+            byte[] raw = new byte[59];
+            Array.Copy(packet, 4, raw, 0, 59);
+            this.RegisterASWCData(raw);
         }
     }
 }

@@ -32,17 +32,20 @@ namespace Metra.Axxess
     {
         public IAxxessBoard Device { get; private set; }
         public string Path { get; private set; }
+        public AxxessFirmwareToken Token { get; private set; }
 
-        public OpArgs(IAxxessBoard device, string path = null)
+        public OpArgs(IAxxessBoard device, string path = null, AxxessFirmwareToken token = null)
         {
             this.Device = device;
             this.Path = path;
+            this.Token = token;
         }
     }
 
     abstract class Operation : IOperation
     {    
         public OperationStatus Status { get; protected set; }
+        public String Message { get; protected set; }
         public OperationType Type { get; protected set; }
         public int OperationsCompleted { get; protected set; }
         public int TotalOperations { get; protected set; }
@@ -75,6 +78,7 @@ namespace Metra.Axxess
             this.OperationsCompleted = 0;
             this.TotalOperations = 1;
             this.Status = OperationStatus.Ready;
+            this.Message = String.Empty;
 
             this._timeoutCounter = 0;
             this.Timeout = 0;
@@ -127,6 +131,11 @@ namespace Metra.Axxess
         OperationStatus IOperation.Status
         {
             get { return this.Status; }
+        }
+
+        String IOperation.Message
+        {
+            get { return this.Message; }
         }
 
         OperationType IOperation.Type

@@ -47,7 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ASWCMapping.cs" />
+    <Compile Include="ASWCInfo.cs" />
     <Compile Include="AxxessConnector.cs" />
     <Compile Include="AxxessFirmware.cs" />
     <Compile Include="AxxessFTDIBoard.cs" />

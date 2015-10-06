@@ -18,7 +18,7 @@ namespace Metra.Axxess
     {
         public ReadyReport(IAxxessBoard dev) : base((HIDDevice)dev)
         {
-            this.SetBuffer(dev.ReadyPacket);
+            this.SetBuffer(dev.ReadyPacket); 
         }
     }
 
@@ -27,6 +27,7 @@ namespace Metra.Axxess
         public ASWCRequestReport(IAxxessBoard dev) : base((HIDDevice)dev)
         {
             this.SetBuffer(dev.ASWCRequestPacket);
+            //Console.WriteLine(this.BufferLength);
         }
     }
 

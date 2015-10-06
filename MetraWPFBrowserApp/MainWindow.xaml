@@ -1,0 +1,20 @@
+﻿<Window x:Class="MetraWPFBrowserApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Metra Application for Windows" Height="350" Width="525" Background="Gray" ResizeMode="NoResize" Closed="Window_Closed">
+    
+    <Grid>
+        <Grid.Background>
+            <ImageBrush ImageSource=".\images\connectdevice.png"></ImageBrush>
+        </Grid.Background>
+        <Button Name="ConnectButton" Content="Connect" HorizontalAlignment="Left" Margin="320,240,0,0" VerticalAlignment="Top" Width="125" Click="ConnectButton_Click"/>
+        <Label Name="MainLabel" Foreground="AntiqueWhite" Content="Main Application Text" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="10,5,10,0" VerticalAlignment="Top" FontSize="20" Width="500" MouseDown="MainLabel_MouseDown" MouseLeave="MainLabel_MouseLeave" MouseUp="MainLabel_MouseUp" FontFamily="Segoe UI Semilight" />
+        <ProgressBar Name="MainProgressBar" HorizontalAlignment="Left" Height="25" Margin="290,280,0,0" VerticalAlignment="Top" Width="187"/>
+        <TextBlock Name="BoardInfoBlock" Foreground="AntiqueWhite" HorizontalAlignment="Left" Margin="50,90,0,0" TextWrapping="Wrap" Text="Device Info" VerticalAlignment="Top" Height="40" Width="75"/>
+        <Button Name="UpdateFirmwareButton" Content="Update Firmware" HorizontalAlignment="Left" Height="20" Margin="40,220,0,0" VerticalAlignment="Top" Width="180" Click="UpdateButton_Click"/>
+        <Button Name="LoadFirmwareButton" Content="Load Firmware File" HorizontalAlignment="Left" Height="20" Margin="40,270,0,0" VerticalAlignment="Top" Width="180" Click="LoadButton_Click"/>
+        <Button Name="ConfigureButtonsButton" Content="Configure Buttons" HorizontalAlignment="Left" Height="20" Margin="40,245,0,0" VerticalAlignment="Top" Width="180" Click="ConfigButton_Click"/>
+    </Grid>
+    
+    
+</Window>

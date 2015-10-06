@@ -16,8 +16,30 @@ namespace Metra.Axxess
         public virtual int PacketSize { get; protected set; }
 
         public string ProductID { get; protected set; }
-        public string AppFirmwareVersion { get; protected set; }
-        public string BootFirmwareVersion { get; protected set; }
+        public string AppFirmwareVersion 
+        {
+            get
+            {
+                return _appVer.ToString();
+            }
+            protected set
+            {
+                _appVer = new AxxessFirmwareVersion(value);
+            }   
+        }
+        AxxessFirmwareVersion _appVer;
+        public string BootFirmwareVersion 
+        {
+            get
+            {
+                return _bootVer.ToString();
+            }
+            protected set
+            {
+                _bootVer = new AxxessFirmwareVersion(value);
+            } 
+        }
+        AxxessFirmwareVersion _bootVer;
         public string Info 
         {
             get
@@ -29,6 +51,8 @@ namespace Metra.Axxess
                 return sb.ToString();
             }
         }
+
+        public ASWCInfo ASWCInformation { get; set; }
         private BoardStatus Status { get; set; }        
 
         public byte[] IntroPacket { get; protected set; }
@@ -43,6 +67,7 @@ namespace Metra.Axxess
             this.ProductID = String.Empty;
             this.AppFirmwareVersion = String.Empty;
             this.BootFirmwareVersion = String.Empty;
+            this.ASWCInformation = null;
             this.Status = BoardStatus.Idle;
 
             this.PacketSize = 44;
@@ -78,7 +103,7 @@ namespace Metra.Axxess
 
             //Add content bytes
             for (int i = 0; i < content.Length; i++)
-                newPacket[i] = content[i];
+                newPacket[i + 1] = content[i];
 
             return newPacket;
         }
@@ -97,31 +122,37 @@ namespace Metra.Axxess
                 content += Convert.ToChar(b);
             }
 
-            if (content.Substring(6, 3).Equals("CWI"))
+            if (content.Substring(7, 3).Equals("CWI"))
             {
-                this.ProductID = content.Substring(6, 9);
-                this.AppFirmwareVersion = content.Substring(20, 2);
+                this.ProductID = content.Substring(7, 9);
+                this.AppFirmwareVersion = content.Substring(21, 2);
                 return true;
             }
             else { return false; }
         }
         protected virtual bool ProcessIntroPacket(byte[] packet)
         {
-            return (packet[0] == 0x01 && packet[2] == 0x0F &&
-                packet[2] == 0x10 && packet[3] == 0x16 &&
-                packet[4] == 0x1A && this.ParseIntroPacket(packet));
+            return (packet[1] == 0x01 && packet[2] == 0x0F &&
+                packet[3] == 0x10 && packet[4] == 0x16 &&
+                packet[5] == 0x1A && this.ParseIntroPacket(packet));
         }        
 
         //Event related stuff
         public virtual bool IsAck(byte[] packet) 
         {
-            return ((packet[4] == 0x41)
-                || (packet[5] == 0x41)
-                || (packet[6] == 0x41));
+            return ((packet[1] == 0x41)
+                || (packet[2] == 0x41)
+                || (packet[3] == 0x41));
         }
         public virtual bool IsFinal(byte[] packet) 
         {
-            return (packet[4] == 0x38);
+            return (packet[1] == 0x38);
+        }
+        public virtual bool IsASWCRead(byte[] packet)
+        {
+            return packet[1] == 0x01
+                && packet[2] == 0x0F
+                && packet[3] == 0xA0;
         }
 
         /// <summary>
@@ -148,6 +179,21 @@ namespace Metra.Axxess
             }
             else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
             else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
+            
+            if (this.ASWCInformation == null && this.IsASWCRead(packet))
+            {
+                this.ProcessASWCPacket(packet);
+            }
+        }
+
+        protected virtual void ProcessASWCPacket(byte[] packet)
+        {
+            this.RegisterASWCData(packet);
+        }
+
+        public virtual void RegisterASWCData(byte[] raw)
+        {
+            this.ASWCInformation = new ASWCInfo(raw);
         }
 
         public override InputReport CreateInputReport()
@@ -177,6 +223,7 @@ namespace Metra.Axxess
         string IAxxessBoard.AppFirmwareVersion { get { return this.AppFirmwareVersion; } }
         string IAxxessBoard.BootFirmwareVersion { get { return this.BootFirmwareVersion; } }
         string IAxxessBoard.Info { get { return this.Info; } }
+        ASWCInfo IAxxessBoard.ASWCInformation { get { return this.ASWCInformation; } }
         BoardType IAxxessBoard.Type { get { return this.Type; } }
         int IAxxessBoard.PacketSize { get { return this.PacketSize; } }
 
@@ -186,7 +233,7 @@ namespace Metra.Axxess
 
         void IAxxessBoard.SendIntroPacket() { this.SendIntroPacket(); }
         void IAxxessBoard.SendReadyPacket() { this.SendReadyPacket(); }
-        void IAxxessBoard.SendASWCMappingPacket(ASWCButtonMap map) { throw new NotImplementedException(); }
+        void IAxxessBoard.SendASWCMappingPacket(ASWCInfo map) { throw new NotImplementedException(); }
         void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
         void IAxxessBoard.SendPacket(byte[] packet) { this.Write(new GenericOutputReport(this, packet)); }
         void IAxxessBoard.SendRawPacket(byte[] packet) { this.Write(new RawOutputReport(this, packet)); }

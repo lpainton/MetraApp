@@ -81,6 +81,11 @@ namespace Metra.Axxess
         /// </summary>
         string Info { get; }
 
+        /// <summary>
+        /// Gets the ASWC info for the board
+        /// </summary>
+        ASWCInfo ASWCInformation { get; }
+
         BoardType Type { get; }
 
         int PacketSize { get; }
@@ -109,7 +114,7 @@ namespace Metra.Axxess
         /// <summary>
         /// Sends an ASWC write packet to attempt button remap.
         /// </summary>
-        void SendASWCMappingPacket(ASWCButtonMap map);
+        void SendASWCMappingPacket(ASWCInfo map);
 
         /// <summary>
         /// Sends the provided packet.

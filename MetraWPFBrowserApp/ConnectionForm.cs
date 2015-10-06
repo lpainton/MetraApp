@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using Metra.Axxess;
 using System.Threading;
 
-namespace MetraApplication
+namespace MetraWPFBrowserApp
 {
     public partial class ConnectionForm : Form
     {

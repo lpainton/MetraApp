@@ -213,7 +213,7 @@ namespace MetraApplication
 
             if (result == DialogResult.OK)
             {
-                this.UpdateFromFile(fileDialog.FileName);
+                this.UpdateFromFile(fileDialog.FileName, new AxxessFirmwareToken(fileDialog.FileName, String.Empty));
             }
         }
 
@@ -230,20 +230,30 @@ namespace MetraApplication
                 Thread.Sleep(100);
             }
 
-            string fileName = FManager.SearchManifest(this.attachedDevice.ProductID);
+            AxxessFirmwareToken fileToken = FManager.SearchManifest(this.attachedDevice.ProductID);
 
-            if (fileName.Equals(String.Empty))
+            if (fileToken.IsNull)
             {
                 MessageBox.Show("Could not determine a firmware file for the connected device!");
                 this.Status = AppStatus.DeviceConnected;
             }
             else
             {
-                UpdateFromFile(FManager.GetPathToFirmware(fileName));
+                //Version checking here
+                AxxessFirmwareVersion currVer = new AxxessFirmwareVersion(this.attachedDevice.AppFirmwareVersion);
+                if (currVer.CompareTo(fileToken.FileVersion) >= 0)
+                {
+                    DialogResult res = MessageBox.Show("The firmware version on the device is up-to-date.  Should we force the update anyway?", 
+                        "Force Update?", MessageBoxButtons.YesNo);
+
+                    if (res == DialogResult.No) return;
+                }
+
+                UpdateFromFile(FManager.GetPathToFirmware(fileToken.FileName), fileToken);
             }
         }
 
-        private void UpdateFromFile(string path)
+        private void UpdateFromFile(string path, AxxessFirmwareToken token)
         {
             //Checkpoint
             if (this.CurrentOperation == null || !this.CurrentOperation.Type.Equals(OperationType.Boot))
@@ -253,7 +263,7 @@ namespace MetraApplication
 
             this.CurrentOperation.Stop();
             this.CurrentOperation.WorkerThread.Join();
-            this.CurrentOperation = OperationFactory.SpawnOperation(OperationType.Firmware, new OpArgs(this.attachedDevice, path));
+            this.CurrentOperation = OperationFactory.SpawnOperation(OperationType.Firmware, new OpArgs(this.attachedDevice, path, token));
             this.CurrentOperation.Start();
 
             this.Status = AppStatus.Streaming;
@@ -317,7 +327,9 @@ namespace MetraApplication
             {
                 if (this.CurrentOperation != null && !this.CurrentOperation.Equals(OperationType.Boot))
                 {
-                    if (this.CurrentOperation.Status.Equals(OperationStatus.Working))
+                    if (this.CurrentOperation.Message != String.Empty)
+                        this.mainStatusLabel.Text = this.CurrentOperation.Message;
+                    else if (this.CurrentOperation.Status.Equals(OperationStatus.Working))
                         this.mainStatusLabel.Text = this.CurrentOperation.Type.ToString() + " operation in progress...";
                     else if (this.CurrentOperation.Status.Equals(OperationStatus.Finished))
                         this.mainStatusLabel.Text = this.CurrentOperation.Type.ToString() + " operation completed.";

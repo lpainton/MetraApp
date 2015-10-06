@@ -162,7 +162,7 @@ namespace Metra.Axxess
 		/// Write an output report to the device.
 		/// </summary>
 		/// <param name="oOutRep">Output report to write</param>
-        protected void Write(OutputReport oOutRep)
+        public void Write(OutputReport oOutRep)
         {
 			try
 			{
