@@ -22,11 +22,11 @@ namespace MetraWPFBrowserApp
         {
             if (state.Equals(AppState.DeviceConnected))
             {
-                this.Enable();
+                this.Disable();
             }
             else if (!state.Equals(AppState.DeviceConnected))
             {
-                this.Disable();
+                this.Enable();
             }
         }
 

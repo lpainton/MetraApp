@@ -32,11 +32,11 @@ namespace MetraWPFBrowserApp
                     return;
 
                 case AppState.NoDevice:
-                    this.ChangeText("Click connect to get started!");
+                    this.ChangeText("Select a function to get started!");
                     return;
 
                 case AppState.DeviceConnected:
-                    this.ChangeText("Select an option to continue...");
+                    this.ChangeText("Select an update option to continue...");
                     return;
 
                 case AppState.Streaming:

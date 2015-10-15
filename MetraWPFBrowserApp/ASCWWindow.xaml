@@ -4,52 +4,31 @@
         Title="ASCWWindow" Height="650" Width="700" ContentRendered="OnRendered">
     <DockPanel Margin="0,0,0,0" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top">
-            <Menu IsMainMenu="True" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="690" Margin="0,0,0,0">
-                <MenuItem Header="_File">
-                    <MenuItem Header="_Save Config" />
-                    <MenuItem Header="_Load Config" />
-                </MenuItem>
-            </Menu>
             <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
                 <StackPanel Orientation="Horizontal">
                     <Label Content="ASWC Version: " HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                    <Label Name="VersionLabel" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <Label Name="VersionLabel" Content="{Binding VersionString}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="100,0,0,0">
                     <Label Content="Radio Type:" HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                    <ComboBox Name="RadioBox" SelectedIndex="0" HorizontalAlignment="Right" VerticalAlignment="Center" Width="120">
-                        <ComboBoxItem>Unknown</ComboBoxItem>
-                        <ComboBoxItem>Eclipse</ComboBoxItem>
-                        <ComboBoxItem>Kenwood</ComboBoxItem>
-                        <ComboBoxItem>Clarion</ComboBoxItem>
-                        <ComboBoxItem>Sony/Dual</ComboBoxItem>
-                        <ComboBoxItem>JVC</ComboBoxItem>
-                        <ComboBoxItem>Jensen/Pioneer</ComboBoxItem>
-                        <ComboBoxItem>Alpine</ComboBoxItem>
-                        <ComboBoxItem>Visteon</ComboBoxItem>
-                        <ComboBoxItem>Valor</ComboBoxItem>
-                        <ComboBoxItem>Clarion - Type II</ComboBoxItem>
-                        <ComboBoxItem>Freeway</ComboBoxItem>
-                        <ComboBoxItem>Eclipse - Type II</ComboBoxItem>
-                        <ComboBoxItem>LG</ComboBoxItem>
-                        <ComboBoxItem>Parrot</ComboBoxItem>
-                        <ComboBoxItem>Xite Solutions</ComboBoxItem>
-                    </ComboBox>
+                    <ComboBox Name="RadioBox" ItemsSource="{Binding RadioList}" SelectedIndex="{Binding RadioType}" HorizontalAlignment="Right" VerticalAlignment="Center" Width="120" />
                 </StackPanel>
                 <StackPanel Margin="30,0,0,0" Orientation="Horizontal">
-                    <CheckBox Name="StalkCheck" Content="Stalk Present" VerticalAlignment="Center" Click="StalkClicked"/>
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <RadioButton Name="StalkLeft" Margin="5,0,0,0" VerticalAlignment="Center" GroupName="Stalk" Content="Left" />
-                        <RadioButton Name="StalkRight" Margin="10,0,0,0" VerticalAlignment="Center" GroupName="Stalk" Content="Right" />
-                    </StackPanel>
+                    <CheckBox Name="StalkCheck" Content="Stalk Present" VerticalAlignment="Center" IsChecked="{Binding StalkPresent}" />
+                    <ComboBox Margin="10,0,0,0" Width="120" ItemsSource="{Binding StalkOptions}" SelectedIndex="{Binding StalkOrientation}" />
                 </StackPanel>
             </StackPanel>
-            <Button Content="Update Config" Margin="0,10,0,0"  HorizontalAlignment="Center" Width="200" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Save Config" Margin="0,10,0,0"  HorizontalAlignment="Center" Width="100" Click="Save_Button_Click" />
+                <Button Content="Load Config" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" Click="Load_Button_Click" />
+                <Button Content="Read from Board" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" IsEnabled="False" />
+                <Button Content="Write to Board" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" IsEnabled="False" />
+            </StackPanel>
         </StackPanel>
 
         <Border DockPanel.Dock="Left" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="480" Margin="5,0,0,0" VerticalAlignment="Center" Width="330">
             <StackPanel>
-                <CheckBox Content="Remap Buttons" HorizontalAlignment="Left" Margin="115,5,0,0" VerticalAlignment="Top"/>
+                <CheckBox Name="RemapCheckBox" Content="Remap Buttons" HorizontalAlignment="Left" Margin="115,5,0,0" VerticalAlignment="Top" IsChecked="{Binding ButtonRemapActive}"/>
                 <Grid Margin="0,5,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="25" />
@@ -93,24 +72,24 @@
                     <Label Grid.Column="0" Grid.Row="15"  Content="Fan Down" />
                     <Label Grid.Column="0" Grid.Row="16"  Content="Temperature Up" />
                     <Label Grid.Column="0" Grid.Row="17"  Content="Temperature Down" />
-                    <ComboBox Grid.Column="1" Grid.Row="0" Name="VolUpBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="1" Name="VolDownBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="2" Name="SeekUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="3" Name="SeekDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="4" Name="ModeSourceBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="5" Name="MuteBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="6" Name="PresetUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="7" Name="PresetDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="8" Name="PowerBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="9" Name="BandBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="10" Name="PlayEnterBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="11" Name="PTTBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="12" Name="OnHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="13" Name="OffHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="14" Name="FanUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="15" Name="FanDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="16" Name="TempUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="17" Name="TempDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
+                    <ComboBox Grid.Column="1" Grid.Row="0" Name="VolUpBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="{Binding ButtonRemapValues[0]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="1" Name="VolDownBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="{Binding ButtonRemapValues[1]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="2" Name="SeekUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[2]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="3" Name="SeekDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[3]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="4" Name="ModeSourceBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[4]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="5" Name="MuteBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[5]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="6" Name="PresetUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[6]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="7" Name="PresetDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[7]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="8" Name="PowerBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[8]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="9" Name="BandBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[9]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="10" Name="PlayEnterBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[10]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="11" Name="PTTBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[11]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="12" Name="OnHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[12]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="13" Name="OffHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[13]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="14" Name="FanUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[14]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="15" Name="FanDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[15]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="16" Name="TempUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[16]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="17" Name="TempDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding ButtonRemapValues[17]}" />
                 </Grid>
             </StackPanel>
         </Border>
@@ -142,42 +121,42 @@
                         <ColumnDefinition Width="165" />
                         <ColumnDefinition Width="165" />
                     </Grid.ColumnDefinitions>
-                    <CheckBox Grid.Column="0" Grid.Row="0" Name="VolUpCheck" IsEnabled="False" Content="Volume Up" />
-                    <CheckBox Grid.Column="0" Grid.Row="1" Name="VolDownCheck" IsEnabled="False"  Content="Volume Down" />
-                    <CheckBox Grid.Column="0" Grid.Row="2" Name="SeekUpCheck"  Content="Seek Up" />
-                    <CheckBox Grid.Column="0" Grid.Row="3" Name="SeekDownCheck"  Content="Seek Down" />
-                    <CheckBox Grid.Column="0" Grid.Row="4" Name="ModeSourceCheck"  Content="Mode or Source" />
-                    <CheckBox Grid.Column="0" Grid.Row="5" Name="MuteCheck"  Content="Mute" />
-                    <CheckBox Grid.Column="0" Grid.Row="6" Name="PresetUpCheck"  Content="Preset Up" />
-                    <CheckBox Grid.Column="0" Grid.Row="7" Name="PresetDownCheck"  Content="Preset Down" />
-                    <CheckBox Grid.Column="0" Grid.Row="8" Name="PowerCheck"  Content="Power" />
-                    <CheckBox Grid.Column="0" Grid.Row="9" Name="BandCheck"  Content="Band" />
-                    <CheckBox Grid.Column="0" Grid.Row="10" Name="PlayEnterCheck"  Content="Play or Enter" />
-                    <CheckBox Grid.Column="0" Grid.Row="11" Name="PTTCheck"  Content="PTT" />
-                    <CheckBox Grid.Column="0" Grid.Row="12" Name="OnHookCheck"  Content="On Hook" />
-                    <CheckBox Grid.Column="0" Grid.Row="13" Name="OffHookCheck"  Content="Off Hook" />
-                    <CheckBox Grid.Column="0" Grid.Row="14" Name="FanUpCheck"  Content="Fan Up" />
-                    <CheckBox Grid.Column="0" Grid.Row="15" Name="FanDownCheck"  Content="Fan Down" />
-                    <CheckBox Grid.Column="0" Grid.Row="16" Name="TempUpCheck"  Content="Temperature Up" />
-                    <CheckBox Grid.Column="0" Grid.Row="17" Name="TempDownCheck"  Content="Temperature Down" />
-                    <ComboBox Grid.Column="1" Grid.Row="0" Name="PHVolUpBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="1" Name="PHVolDownBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="2" Name="PHSeekUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="3" Name="PHSeekDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="4" Name="PHModeSourceBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="5" Name="PHMuteBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="6" Name="PHPresetUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="7" Name="PHPresetDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="8" Name="PHPowerBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="9" Name="PHBandBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="10" Name="PHPlayEnterBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="11" Name="PHPTTBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="12" Name="PHOnHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="13" Name="PHOffHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="14" Name="PHFanUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="15" Name="PHFanDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="16" Name="PHTempUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
-                    <ComboBox Grid.Column="1" Grid.Row="17" Name="PHTempDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="0" />
+                    <CheckBox Grid.Column="0" Grid.Row="0" Name="VolUpCheck" IsEnabled="False" Content="Volume Up" IsChecked="{Binding PressHoldFlags[0]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="1" Name="VolDownCheck" IsEnabled="False"  Content="Volume Down" IsChecked="{Binding PressHoldFlags[1]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="2" Name="SeekUpCheck"  Content="Seek Up" IsChecked="{Binding PressHoldFlags[2]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="3" Name="SeekDownCheck"  Content="Seek Down" IsChecked="{Binding PressHoldFlags[3]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="4" Name="ModeSourceCheck"  Content="Mode or Source" IsChecked="{Binding PressHoldFlags[4]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="5" Name="MuteCheck"  Content="Mute" IsChecked="{Binding PressHoldFlags[5]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="6" Name="PresetUpCheck"  Content="Preset Up" IsChecked="{Binding PressHoldFlags[6]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="7" Name="PresetDownCheck"  Content="Preset Down" IsChecked="{Binding PressHoldFlags[7]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="8" Name="PowerCheck"  Content="Power" IsChecked="{Binding PressHoldFlags[8]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="9" Name="BandCheck"  Content="Band" IsChecked="{Binding PressHoldFlags[9]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="10" Name="PlayEnterCheck"  Content="Play or Enter" IsChecked="{Binding PressHoldFlags[10]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="11" Name="PTTCheck"  Content="PTT" IsChecked="{Binding PressHoldFlags[11]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="12" Name="OnHookCheck"  Content="On Hook" IsChecked="{Binding PressHoldFlags[12]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="13" Name="OffHookCheck"  Content="Off Hook" IsChecked="{Binding PressHoldFlags[13]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="14" Name="FanUpCheck"  Content="Fan Up" IsChecked="{Binding PressHoldFlags[14]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="15" Name="FanDownCheck"  Content="Fan Down" IsChecked="{Binding PressHoldFlags[15]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="16" Name="TempUpCheck"  Content="Temperature Up" IsChecked="{Binding PressHoldFlags[16]}" />
+                    <CheckBox Grid.Column="0" Grid.Row="17" Name="TempDownCheck"  Content="Temperature Down" IsChecked="{Binding PressHoldFlags[17]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="0" Name="PHVolUpBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="{Binding PressHoldValues[0]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="1" Name="PHVolDownBox" ItemsSource="{Binding Path=ButtonList}" IsEnabled="False" SelectedIndex="{Binding PressHoldValues[1]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="2" Name="PHSeekUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[2]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="3" Name="PHSeekDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[3]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="4" Name="PHModeSourceBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[4]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="5" Name="PHMuteBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[5]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="6" Name="PHPresetUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[6]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="7" Name="PHPresetDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[7]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="8" Name="PHPowerBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[8]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="9" Name="PHBandBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[9]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="10" Name="PHPlayEnterBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[10]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="11" Name="PHPTTBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[11]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="12" Name="PHOnHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[12]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="13" Name="PHOffHookBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[13]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="14" Name="PHFanUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[14]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="15" Name="PHFanDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[15]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="16" Name="PHTempUpBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[16]}" />
+                    <ComboBox Grid.Column="1" Grid.Row="17" Name="PHTempDownBox" ItemsSource="{Binding Path=ButtonList}" SelectedIndex="{Binding PressHoldValues[17]}" />
                 </Grid>
             </StackPanel>
         </Border>

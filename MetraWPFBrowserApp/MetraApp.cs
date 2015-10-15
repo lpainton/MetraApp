@@ -178,7 +178,10 @@ namespace MetraWPFBrowserApp
             ASCWWindow ascwin = new ASCWWindow(this.AttachedDevice);
             ascwin.ShowDialog();
 
-            this.ActiveOperation = OperationFactory.SpawnOperation(OperationType.Boot, new OpArgs(AttachedDevice));
+            if (this._device != null)
+            {
+                this.ActiveOperation = OperationFactory.SpawnOperation(OperationType.Boot, new OpArgs(AttachedDevice));
+            }
         }
 
         public void OnDeviceConnect()

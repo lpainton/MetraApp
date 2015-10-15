@@ -6,6 +6,29 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
+    public enum ASCWButtonTypes
+    {
+        Default,
+        VolumeUp,
+        VolumeDown,
+        SeekUp,
+        SeekDown,
+        ModeOrSource,
+        Mute,
+        PresetUp,
+        PresetDown,
+        Power,
+        Band,
+        PlayOrEnter,
+        PTT,
+        OnHook,
+        OffHook,
+        FanUp,
+        FanDown,
+        TemperatureUp,
+        TemperatureDown
+    };
+
     public class ASWCInfo
     {
         /*        
@@ -61,9 +84,18 @@ namespace Metra.Axxess
         RemappingModel.tempDown = bytes[57 + add]
         */
 
-        public int VersionMajor { get { return Convert.ToInt32(_vMajor); } }
-        public int VersionMinor { get { return Convert.ToInt32(_vMinor); } }
-        public int VersionBuild { get { return Convert.ToInt32(_vBuild); } }
+        public string[] ButtonList { get { return Enum.GetNames(typeof(ASCWButtonTypes)); } }
+        private Dictionary<byte, string> _radioList;
+        public string[] RadioList { get { return _radioList.Values.ToArray(); } }
+        private Dictionary<byte, string> _carBusList;
+        public string[] BusList { get { return _carBusList.Values.ToArray(); } }
+        private Dictionary<byte, string> _carMethodList;
+        public string[] MethodList { get { return _carMethodList.Values.ToArray(); } }
+        public string[] StalkOptions { get { return new string[] { "Unknown", "Left", "Right" }; } }
+
+        public int VersionMajor { get; set; }
+        public int VersionMinor { get; set; }
+        public int VersionBuild { get; set; }
         public string VersionString
         {
             get
@@ -78,125 +110,224 @@ namespace Metra.Axxess
             }
         }
 
-        public byte RadioType { get { return _rType; } }
-        public byte CarCommBus { get { return _cBus; } }
-        public byte CarFlavor { get { return _cFlavor; } }
-        public bool StalkPresent { get { return (_sPresent.Equals(0x01)); } }
-        public byte StalkOrientation { get { return _sOrientation; } }
-        public byte PressHoldFlags1 { get { return _phFlag1; } }
-        public byte PressHoldFlags2 { get { return _phFlag2; } }
-        public byte PressHoldFlags3 { get { return _phFlag3; } }
-        public byte PressHoldVolumeUp { get { return _phVolUp; } }
-        public byte PressHoldVolumeDown { get { return _phVolDown; } }
-        public byte PressHoldSeekUp { get { return _phSeekUp; } }
-        public byte PressHoldSeekDown { get { return _phSeekDown; } }
-        public byte PressHoldModeSource { get { return _phModeSource; } }
-        public byte PressHoldMute { get { return _phMute; } }
-        public byte PressHoldPresetUp { get { return _phPresetUp; } }
-        public byte PressHoldPresetDown { get { return _phPresetDown; } }
-        public byte PressHoldPower { get { return _phPower; } }
-        public byte PressHoldBand { get { return _phBand; } }
-        public byte PressHoldPlayEnter { get { return _phPlayEnter; } }
-        public byte PressHoldPTT { get { return _phPTT; } }
-        public byte PressHoldOnHook { get { return _phOnHook; } }
-        public byte PressHoldOffHook { get { return _phOffHook; } }
-        public byte PressHoldFanUp { get { return _phFanUp; } }
-        public byte PressHoldFanDown { get { return _phFanDown; } }
-        public byte PressHoldTempUp { get { return _phTempUp; } }
-        public byte PressHoldTempDown { get { return _phTempDown; } }
-        public bool ButtonRemapActive { get { return (_bRemapFlag.Equals(0x01)); } }
-        public byte VolumeUp { get { return _volUp; } }
-        public byte VolumeDown { get { return _volDown; } }
-        public byte SeekUp { get { return _seekUp; } }
-        public byte SeekDown { get { return _seekDown; } }
-        public byte ModeSource { get { return _modeSource; } }
-        public byte Mute { get { return _mute; } }
-        public byte PresetUp { get { return _presetUp; } }
-        public byte PresetDown { get { return _presetDown; } }
-        public byte Power { get { return _power; } }
-        public byte Band { get { return _band; } }
-        public byte PlayEnter { get { return _playEnter; } }
-        public byte PTT { get { return _PTT; } }
-        public byte OnHook { get { return _onHook; } }
-        public byte OffHook { get { return _offHook; } }
-        public byte FanUp { get { return _fanUp; } }
-        public byte FanDown { get { return _fanDown; } }
-        public byte TempUp { get { return _tempUp; } }
-        public byte TempDown { get { return _tempDown; } }
+        public byte RadioType { get; set; }
+        public byte CarCommBus { get; set; }
+        public byte CarFlavor { get; set; }
+        public bool StalkPresent { get; set; }
+        public byte StalkOrientation { get; set; }
+        public bool[] PressHoldFlags { get; set; }
+        //byte PressHoldFlags1 { get { return _phFlag1; } }
+        //byte PressHoldFlags2 { get { return _phFlag2; } }
+        //byte PressHoldFlags3 { get { return _phFlag3; } }
+        public byte[] PressHoldValues { get; set; }
+        /*public byte PressHoldVolumeUp { get; set; }
+        public byte PressHoldVolumeDown { get; set; }
+        public byte PressHoldSeekUp { get; set; }
+        public byte PressHoldSeekDown { get; set; }
+        public byte PressHoldModeSource { get; set; }
+        public byte PressHoldMute { get; set; }
+        public byte PressHoldPresetUp { get; set; }
+        public byte PressHoldPresetDown { get; set; }
+        public byte PressHoldPower { get; set; }
+        public byte PressHoldBand { get; set; }
+        public byte PressHoldPlayEnter { get; set; }
+        public byte PressHoldPTT { get; set; }
+        public byte PressHoldOnHook { get; set; }
+        public byte PressHoldOffHook { get; set; }
+        public byte PressHoldFanUp { get; set; }
+        public byte PressHoldFanDown { get; set; }
+        public byte PressHoldTempUp { get; set; }
+        public byte PressHoldTempDown { get; set; }*/
+        public bool ButtonRemapActive { get; set; }
+        public byte[] ButtonRemapValues { get; set; }
+        /*public byte VolumeUp { get; set; }
+        public byte VolumeDown { get; set; }
+        public byte SeekUp { get; set; }
+        public byte SeekDown { get; set; }
+        public byte ModeSource { get; set; }
+        public byte Mute { get; set; }
+        public byte PresetUp { get; set; }
+        public byte PresetDown { get; set; }
+        public byte Power { get; set; }
+        public byte Band { get; set; }
+        public byte PlayEnter { get; set; }
+        public byte PTT { get; set; }
+        public byte OnHook { get; set; }
+        public byte OffHook { get; set; }
+        public byte FanUp { get; set; }
+        public byte FanDown { get; set; }
+        public byte TempUp { get; set; }
+        public byte TempDown { get; set; }*/
 
-
-        byte _vMajor, _vMinor, _vBuild;
-        byte _rType, _cBus, _cFlavor;
-        byte _sPresent, _sOrientation;
         byte _phFlag1, _phFlag2, _phFlag3;
-        byte _phVolUp, _phVolDown, _phSeekUp, _phSeekDown, _phModeSource, _phMute,
-            _phPresetUp, _phPresetDown, _phPower, _phBand, _phPlayEnter, _phPTT, _phOnHook, _phOffHook,
-            _phFanUp, _phFanDown, _phTempUp, _phTempDown;
-        byte _bRemapFlag;
-        byte _volUp, _volDown, _seekUp, _seekDown, _modeSource, _mute, _presetUp, _presetDown,
-            _power, _band, _playEnter, _PTT, _onHook, _offHook, _fanUp, _fanDown, _tempUp, _tempDown;
+        byte[] _rawPacket;
 
-        public ASWCInfo(byte[] raw)
+        public ASWCInfo()
         {
+            //Radios
+            _radioList = new Dictionary<byte, string>();
+            _radioList.Add(0x00, "Unknown");
+            _radioList.Add(0x01, "Eclipse");
+            _radioList.Add(0x02, "Kenwood");
+            _radioList.Add(0x03, "Clarion");
+            _radioList.Add(0x04, "Sony / Dual");
+            _radioList.Add(0x05, "JVC");
+            _radioList.Add(0x06, "Jensen / Pioneer");
+            _radioList.Add(0x07, "Alpine (default)");
+            _radioList.Add(0x08, "Visteon");
+            _radioList.Add(0x09, "Valor");
+            _radioList.Add(0x0A, "Clarion – Type II");
+            _radioList.Add(0x0B, "Freeway");
+            _radioList.Add(0x0C, "Eclipse – Type II");
+            _radioList.Add(0x0D, "LG");
+            _radioList.Add(0x0E, "Parrot");
+            _radioList.Add(0x0F, "Xite Solutions");
+
+            //Car bus type
+            _carBusList = new Dictionary<byte, string>();
+            _carBusList.Add(0x00, "Unknown");
+            _carBusList.Add(0x01, "Resistive");
+            _carBusList.Add(0x02, "CAN Car");
+            _carBusList.Add(0x03, "J1850 Car");
+            _carBusList.Add(0x04, "J1850 Slow Car");
+            _carBusList.Add(0x05, "IBUS");
+            _carBusList.Add(0x06, "Volvo");
+            _carBusList.Add(0x07, "J1850 + Resistive");
+            _carBusList.Add(0x08, "LIN Car");
+
+            //Car communication method
+            _carMethodList = new Dictionary<byte, string>();
+            _carMethodList.Add(0x00, "Unknown");
+            _carMethodList.Add(0x01, "GM LAN33-11");
+            _carMethodList.Add(0x02, "GM LAN11-29");
+            _carMethodList.Add(0x03, "CAN 83.3");
+            _carMethodList.Add(0x04, "CAN 95");
+            _carMethodList.Add(0x05, "CAN 100");
+            _carMethodList.Add(0x06, "CAN 125");
+            _carMethodList.Add(0x07, "CAN 500");
+            _carMethodList.Add(0x08, "CAN 50");
+            _carMethodList.Add(0x09, "Valor");
+            _carMethodList.Add(0x0A, "BMW I-BUS");
+            _carMethodList.Add(0x0B, "VOLVO I-BUS");
+            _carMethodList.Add(0x0C, "J1850");
+            _carMethodList.Add(0x0D, "J1850-slow");
+            _carMethodList.Add(0x0E, "LIN 10000");
+
+            this.PressHoldFlags = new bool[24];
+            this.PressHoldValues = new byte[this.ButtonList.Length - 1];
+            this.ButtonRemapValues = new byte[this.ButtonList.Length - 1];
+        }
+
+        public ASWCInfo(byte[] raw) : this()
+        {
+            this._rawPacket = raw;
             ProcessRawPacket(raw);
         }
 
-        private void ProcessRawPacket(byte[] raw)
+        private bool[] ParsePHFlags(byte f1, byte f2, byte f3)
         {
-            this._vMajor = raw[3];
-            this._vMinor = raw[4];
-            this._vBuild = raw[5];
-            this._rType = raw[6];
-            this._cBus = raw[7];
-            this._cFlavor = raw[9];
+            bool[] flags = new bool[24];
+
+            flags[0] = (f1 & 0x01) != 0;
+            flags[1] = (f1 & 0x02) != 0;
+            flags[2] = (f1 & 0x04) != 0;
+            flags[3] = (f1 & 0x08) != 0;
+            flags[4] = (f1 & 0x16) != 0;
+            flags[5] = (f1 & 0x32) != 0;
+            flags[6] = (f1 & 0x64) != 0;
+            flags[7] = (f1 & 0x128) != 0;
+            flags[8] = (f2 & 0x01) != 0;
+            flags[9] = (f2 & 0x02) != 0;
+            flags[10] = (f2 & 0x04) != 0;
+            flags[11] = (f2 & 0x08) != 0;
+            flags[12] = (f2 & 0x16) != 0;
+            flags[13] = (f2 & 0x32) != 0;
+            flags[14] = (f2 & 0x64) != 0;
+            flags[15] = (f2 & 0x128) != 0;
+            flags[16] = (f3 & 0x01) != 0;
+            flags[17] = (f3 & 0x02) != 0;
+            flags[18] = (f3 & 0x04) != 0;
+
+            return flags;
+        }
+
+        private byte[] ParseButtonValues(byte[] raw, int offset)
+        {
+            byte[] values = new byte[this.ButtonList.Length - 1];
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = raw[i + offset];
+            }
+            return values;
+        }
+
+        public void ProcessRawPacket(byte[] raw)
+        {
+            this.VersionMajor = raw[3];
+            this.VersionMinor = raw[4];
+            this.VersionBuild = raw[5];
+            this.RadioType = raw[6];
+            this.CarCommBus = raw[7];
+            this.CarFlavor = raw[9];
             
-            this._sPresent = raw[13];
-            this._sOrientation = raw[14];
+            this.StalkPresent = raw[13].Equals(0x01);
+            this.StalkOrientation = raw[14];
 
             this._phFlag1 = raw[15];
             this._phFlag2 = raw[16];
             this._phFlag3 = raw[17];
-            this._phVolUp = raw[18];
-            this._phVolDown = raw[19];
-            this._phSeekUp = raw[20];
-            this._phSeekDown = raw[21];
-            this._phModeSource = raw[22];
-            this._phMute = raw[23];
-            this._phPresetUp = raw[24];
-            this._phPresetDown = raw[25];
-            this._phPower = raw[26];
-            this._phBand = raw[27];
-            this._phPlayEnter = raw[28];
-            this._phPTT = raw[29];
-            this._phOnHook = raw[30];
-            this._phOffHook = raw[31];
-            this._phFanUp = raw[32];
-            this._phFanDown = raw[33];
-            this._phTempUp = raw[34];
-            this._phTempDown = raw[35];
+            this.PressHoldFlags = this.ParsePHFlags(this._phFlag3, this._phFlag2, this._phFlag1);
+            this.PressHoldValues = this.ParseButtonValues(raw, 18);
+            this.ButtonRemapActive = raw[39].Equals(0x01);
+            this.ButtonRemapValues = this.ParseButtonValues(raw, 40);
 
-            this._bRemapFlag = raw[39];
-            this._volUp = raw[40];
-            this._volDown = raw[41];
-            this._seekUp = raw[42];
-            this._seekDown = raw[43];
-            this._modeSource = raw[44];
-            this._mute = raw[45];
-            this._presetUp = raw[46];
-            this._presetDown = raw[47];
-            this._power = raw[48];
-            this._band = raw[49];
-            this._playEnter = raw[50];
-            this._PTT = raw[51];
-            this._onHook = raw[52];
-            this._offHook = raw[53];
-            this._fanUp = raw[54];
-            this._fanDown = raw[55];
-            this._tempUp = raw[56];
-            this._tempDown = raw[57];
+            /*this.PressHoldVolumeUp = raw[18];
+            this.PressHoldVolumeDown = raw[19];
+            this.PressHoldSeekUp = raw[20];
+            this.PressHoldSeekDown = raw[21];
+            this.PressHoldModeSource = raw[22];
+            this.PressHoldMute = raw[23];
+            this.PressHoldPresetUp = raw[24];
+            this.PressHoldPresetDown = raw[25];
+            this.PressHoldPower = raw[26];
+            this.PressHoldBand = raw[27];
+            this.PressHoldPlayEnter = raw[28];
+            this.PressHoldPTT = raw[29];
+            this.PressHoldOnHook = raw[30];
+            this.PressHoldOffHook = raw[31];
+            this.PressHoldFanUp = raw[32];
+            this.PressHoldFanDown = raw[33];
+            this.PressHoldTempUp = raw[34];
+            this.PressHoldTempDown = raw[35];*/
+
+
+            /*this.VolumeUp = raw[40];
+            this.VolumeDown = raw[41];
+            this.SeekUp = raw[42];
+            this.SeekDown = raw[43];
+            this.ModeSource = raw[44];
+            this.Mute = raw[45];
+            this.PresetUp = raw[46];
+            this.PresetDown = raw[47];
+            this.Power = raw[48];
+            this.Band = raw[49];
+            this.PlayEnter = raw[50];
+            this.PTT = raw[51];
+            this.OnHook = raw[52];
+            this.OffHook = raw[53];
+            this.FanUp = raw[54];
+            this.FanDown = raw[55];
+            this.TempUp = raw[56];
+            this.TempDown = raw[57];*/
         }
 
-        public string ToString()
+        public ASWCInfo Clone()
+        {
+            return new ASWCInfo(_rawPacket);
+        }
+
+        /*public string ToString()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -207,9 +338,9 @@ namespace Metra.Axxess
             sb.AppendLine("Car Communication Bus: " + this.CarCommBus.ToString());
             sb.AppendLine("Car Flavor: " + this.CarFlavor.ToString());
             sb.AppendLine("Stalk Present: " + this.StalkPresent.ToString());
-            sb.AppendLine("Press & Hold - Flags 1: " + this.PressHoldFlags1.ToString());
-            sb.AppendLine("Press & Hold - Flags 2: " + this.PressHoldFlags2.ToString());
-            sb.AppendLine("Press & Hold - Flags 3: " + this.PressHoldFlags3.ToString());
+            sb.AppendLine("Press & Hold - Flags 1: " + this._phFlag1.ToString());
+            sb.AppendLine("Press & Hold - Flags 2: " + this._phFlag2.ToString());
+            sb.AppendLine("Press & Hold - Flags 3: " + this._phFlag3.ToString());
             sb.AppendLine("Press & Hold - Volume Up: " + this.PressHoldVolumeUp.ToString());
             sb.AppendLine("Press & Hold - Volume Down: " + this.PressHoldVolumeDown.ToString());
             sb.AppendLine("Press & Hold - Seek Up: " + this.PressHoldSeekUp.ToString());
@@ -249,6 +380,6 @@ namespace Metra.Axxess
             sb.AppendLine("Temp Down: " + this.TempDown.ToString());
 
             return sb.ToString();
-        }
+        }*/
     }
 }
