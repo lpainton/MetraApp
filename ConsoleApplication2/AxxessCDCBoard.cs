@@ -155,6 +155,20 @@ namespace Metra.Axxess
         {
             return false;
         }
+        public virtual bool IsASWCRead(byte[] packet)
+        {
+            if (packet.Length < 4) return false;
+            return packet[0] == 0x01
+                && packet[1] == 0x0F
+                && packet[2] == 0xA0;
+        }
+        public virtual bool IsASWCConfirm(byte[] packet)
+        {
+            return packet[1] == 0x01
+                && packet[2] == 0x0F
+                && packet[3] == 0xA8
+                && packet[4] == 0x01;
+        }
 
         /// <summary>
         /// This method is called asynchronously when a packet is received.
@@ -164,6 +178,7 @@ namespace Metra.Axxess
         protected override void HandleDataReceived(byte[] packet)
         {
             Util.TestConsoleWrite(this.TestMode, "Handling received packet...");
+            Report.PrintBuffer(packet);
             if (TestMode)
             {
                 StringBuilder sb = new StringBuilder();
@@ -179,8 +194,10 @@ namespace Metra.Axxess
                 if (this.ProcessIntroPacket(packet))
                     this.OnIntroReceived(new PacketEventArgs(packet));
             }
-            else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
-            else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
+            else if (this.OnAck != null && this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
+            else if (this.OnFinal != null && this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
+            
+            if (this.OnASWCInfo != null && this.IsASWCRead(packet)) this.OnASWCInfoReceieved(new ASWCEventArgs(new ASWCInfo(packet)));
         }
 
         public InputReport CreateInputReport()

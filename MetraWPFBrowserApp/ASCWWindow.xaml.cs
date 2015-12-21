@@ -24,9 +24,8 @@ namespace MetraWPFBrowserApp
     public partial class ASCWWindow : Window
     {
         IAxxessBoard AttachedDevice { get; set; }
-        ASWCInfo WorkingSet { get; set; }
-
-
+        public ASWCInfo WorkingSet { get; set; }
+        delegate void ContextDelegate();
 
         public ASCWWindow(IAxxessBoard device)
         {
@@ -40,15 +39,6 @@ namespace MetraWPFBrowserApp
 
         private void OnRendered(object sender, EventArgs e)
         {
-            /*Thread.Sleep(1000);
-            while (this.AttachedDevice.ASWCInformation == null)
-            {
-                //Console.WriteLine("ASCW packet send");
-                this.AttachedDevice.SendASWCRequestPacket();
-                Thread.Sleep(1000);
-            }*/
-
-            //UpdateASWCInfo(this.AttachedDevice.ASWCInformation);
 
         }
 
@@ -115,87 +105,184 @@ namespace MetraWPFBrowserApp
             return JsonConvert.DeserializeObject<ASWCInfo>(input);
         }
 
-
-
-        /*private void UpdateASWCInfo(ASWCInfo info)
+        private void Read_Button_Click(object sender, RoutedEventArgs e)
         {
-            this.VersionLabel.Content = info.VersionString;
+            try
+            {
+                ConnectWithDevice();
+            }
+            catch (AxxessDeviceException)
+            {
+                return;
+            }
 
-            //Radio Info
-            this.RadioBox.SelectedIndex = Convert.ToInt32(info.RadioType);
+            //Prep for read
+            this.WorkingSet = null;
+            ManualResetEventSlim waitHandle = new ManualResetEventSlim();
+            ASWCInfoHandler handler = (send, evargs) =>
+            {
+                this.WorkingSet = ((ASWCEventArgs)evargs).Info;
+                waitHandle.Set();
+            };
+            this.AttachedDevice.AddASWCInfoEvent(handler);
 
-            //Stalk info
-            this.StalkCheck.IsChecked = info.StalkPresent;
+            int retries = 3;
+            try
+            {
+                while ((retries--) > 0)
+                {
+                    this.AttachedDevice.SendASWCRequestPacket();
+                    bool set = waitHandle.Wait(3000);
+                    if (set) break;
+                    else waitHandle.Reset();
+                }
+                if (retries <= 0) throw new TimeoutException();
+            }
+            catch (TimeoutException)
+            {
 
-            //Button remaps
-            this.RemapCheckBox.IsChecked = info.ButtonRemapActive;
+                MessageBox.Show("Timed out while reading ASCW info.  Please disconnect device and try again!");
+            }
+            finally
+            {
+                this.AttachedDevice.RemoveASWCInfoEvent(handler);
+                this.DataContext = this.WorkingSet;
+            }
+        }
 
-            //Mapping
-            this.VolUpBox.SelectedIndex = info.VolumeUp;
-            this.VolDownBox.SelectedIndex = info.VolumeDown;
-            this.SeekUpBox.SelectedIndex = info.SeekUp;
-            this.SeekDownBox.SelectedIndex = info.SeekDown;
-            this.ModeSourceBox.SelectedIndex = info.ModeSource;
-            this.MuteBox.SelectedIndex = info.Mute;
-            this.PresetUpBox.SelectedIndex = info.PresetUp;
-            this.PresetDownBox.SelectedIndex = info.PresetDown;
-            this.PowerBox.SelectedIndex = info.Power;
-            this.BandBox.SelectedIndex = info.Band;
-            this.PlayEnterBox.SelectedIndex = info.PlayEnter;
-            this.PTTBox.SelectedIndex = info.PTT;
-            this.OnHookBox.SelectedIndex = info.OnHook;
-            this.OffHookBox.SelectedIndex = info.OffHook;
-            this.FanUpBox.SelectedIndex = info.FanUp;
-            this.FanDownBox.SelectedIndex = info.FanDown;
-            this.TempUpBox.SelectedIndex = info.TempUp;
-            this.TempDownBox.SelectedIndex = info.TempDown;
-
-            //Press and hold flags
-            this.VolUpCheck.IsChecked = (info.PressHoldFlags3 & 0x01) == 0x01;
-            this.VolDownCheck.IsChecked = (info.PressHoldFlags3 & 0x02) == 0x02;
-            this.SeekUpCheck.IsChecked = (info.PressHoldFlags3 & 0x04) == 0x04;
-            this.SeekDownCheck.IsChecked = (info.PressHoldFlags3 & 0x08) == 0x08;
-            this.ModeSourceCheck.IsChecked = (info.PressHoldFlags3 & 0x10) == 0x10;
-            this.MuteCheck.IsChecked = (info.PressHoldFlags3 & 0x20) == 0x20;
-            this.PresetUpCheck.IsChecked = (info.PressHoldFlags3 & 0x40) == 0x40;
-            this.PresetDownCheck.IsChecked = (info.PressHoldFlags3 & 0x80) == 0x80;
-            this.PowerCheck.IsChecked = (info.PressHoldFlags2 & 0x01) == 0x01;
-            this.BandCheck.IsChecked = (info.PressHoldFlags2 & 0x02) == 0x02;
-            this.PlayEnterCheck.IsChecked = (info.PressHoldFlags2 & 0x04) == 0x04;
-            this.PTTCheck.IsChecked = (info.PressHoldFlags2 & 0x08) == 0x08;
-            this.OnHookCheck.IsChecked = (info.PressHoldFlags2 & 0x10) == 0x10;
-            this.OffHookCheck.IsChecked = (info.PressHoldFlags2 & 0x20) == 0x20;
-            this.FanUpCheck.IsChecked = (info.PressHoldFlags2 & 0x40) == 0x40;
-            this.FanDownCheck.IsChecked = (info.PressHoldFlags2 & 0x80) == 0x80;
-            this.TempUpCheck.IsChecked = (info.PressHoldFlags1 & 0x01) == 0x01;
-            this.TempDownCheck.IsChecked = (info.PressHoldFlags1 & 0x02) == 0x02;
-
-            //PH Mapping
-            this.PHVolUpBox.SelectedIndex = info.PressHoldVolumeUp;
-            this.PHVolDownBox.SelectedIndex = info.PressHoldVolumeDown;
-            this.PHSeekUpBox.SelectedIndex = info.PressHoldSeekUp;
-            this.PHSeekDownBox.SelectedIndex = info.PressHoldSeekDown;
-            this.PHModeSourceBox.SelectedIndex = info.PressHoldModeSource;
-            this.PHMuteBox.SelectedIndex = info.PressHoldMute;
-            this.PHPresetUpBox.SelectedIndex = info.PressHoldPresetUp;
-            this.PHPresetDownBox.SelectedIndex = info.PressHoldPresetDown;
-            this.PHPowerBox.SelectedIndex = info.PressHoldPower;
-            this.PHBandBox.SelectedIndex = info.PressHoldBand;
-            this.PHPlayEnterBox.SelectedIndex = info.PressHoldPlayEnter;
-            this.PHPTTBox.SelectedIndex = info.PressHoldPTT;
-            this.PHOnHookBox.SelectedIndex = info.PressHoldOnHook;
-            this.PHOffHookBox.SelectedIndex = info.PressHoldOffHook;
-            this.PHFanUpBox.SelectedIndex = info.PressHoldFanUp;
-            this.PHFanDownBox.SelectedIndex = info.PressHoldFanDown;
-            this.PHTempUpBox.SelectedIndex = info.PressHoldTempUp;
-            this.PHTempDownBox.SelectedIndex = info.PressHoldTempDown;
-            
-        }*/
-
-        /*private void StalkClicked(object sender, RoutedEventArgs e)
+        private void Write_Button_Click(object sender, RoutedEventArgs e)
         {
-            StalkLeft.IsEnabled = StalkCheck.IsChecked.Value;
-            StalkLeft.IsEnabled = StalkCheck.IsChecked.Value;
-        }*/
+            try 
+            {
+                ConnectWithDevice(); 
+            }
+            catch (AxxessDeviceException)
+            {
+                return;
+            }
+
+            //Thread.Sleep(1000);
+
+            //Prep for read
+            ManualResetEventSlim waitHandle = new ManualResetEventSlim();
+            byte[] packet = null;
+            ASWCConfirmHandler handler = (send, evargs) =>
+            {
+                packet = ((PacketEventArgs)evargs).Packet;
+                waitHandle.Set();
+            };
+            this.AttachedDevice.AddASWCConfimEvent(handler);
+
+            try
+            {
+                this.AttachedDevice.SendASWCMappingPacket(this.WorkingSet);
+                bool set = waitHandle.Wait(15000);
+                if (!set) throw new TimeoutException();
+
+                //Read packet for result 
+                string msg = String.Empty;
+                switch (packet[8])
+                {
+                    //0x00 – ALL DATA IS GOOD AND RECORDED
+                    case 0x00:
+                        msg = "Device configuration successful!";
+                        break;
+
+                    //0xA2 – RADIO TYPE NUMBER FAILURE 
+                    case 0xA2:
+                        msg = "Error: Radio type number failure.";
+                        break;
+
+                    //0xA3 – COMMUNICAITON TYPE FAILURE 
+                    case 0xA3:
+                        msg = "Error: Communication type failure.";
+                        break;
+
+                    //0xA4 – STALK FLAG FAILURE
+                    case 0xA4:
+                        msg = "Error: Stalk flag failure.";
+                        break;
+
+                    //0xA5 – STALK FLAG ORIENTATION FAILURE
+                    case 0xA5:
+                        msg = "Error: Stalk flag orientation failure.";
+                        break;
+
+                    //0xA6 – PRESS/HOLD FLAG FAILURE 
+                    case 0xA6:
+                        msg = "Error: Press/hold flag failure.";
+                        break;
+
+                    //0xA7 – PRESS/HOLD BUTTON FAILURE 
+                    case 0xA7:
+                        msg = "Error: Press/hold button failure.";
+                        break;
+
+                    //0xA8 – BUTTON REMAP FLAG FAILURE 
+                    case 0xA8:
+                        msg = "Error: Button remap flag failure.";
+                        break;
+
+                    default:
+                        msg = "Error: An unknown error occurred.";
+                        break;
+                }
+
+                MessageBox.Show(msg);
+            }
+            catch (TimeoutException)
+            {
+                MessageBox.Show("Timed out while writing ASCW info.  Please disconnect device and try again!");
+            }
+            finally
+            {
+                this.AttachedDevice.RemoveASWCConfimEvent(handler);
+            }
+        }
+
+        private void ConnectWithDevice()
+        {
+            if (this.AttachedDevice == null)
+            {
+                ConnectionForm c = new ConnectionForm();
+                c.ShowDialog();
+                this.AttachedDevice = c.Device;
+                c.Dispose();
+            }
+            if (this.AttachedDevice == null)
+            {
+                MessageBox.Show("No device was found.  Please plug a device into the computer before retrying.");
+                throw new AxxessDeviceException();
+            }
+            else
+            {
+                OnDeviceConnect();
+            }
+        }
+        public void OnDeviceConnect()
+        {
+            this.AttachedDevice.AddRemovedEvent(OnDeviceRemoved);
+        }
+        public void OnDeviceRemoved(object sender, EventArgs e)
+        {
+            this.AttachedDevice.Dispose();
+            this.AttachedDevice = null;
+            this.WorkingSet = new ASWCInfo();
+            this.SetContextToWorkingSet();
+        }
+        public void SetContextToWorkingSet()
+        {
+            if (this.Dispatcher.CheckAccess())
+            {
+                this.DataContext = this.WorkingSet;
+            }
+            else
+            {
+                this.Dispatcher.BeginInvoke(
+                    new ContextDelegate(SetContextToWorkingSet),
+                    System.Windows.Threading.DispatcherPriority.Normal,
+                    new object[] { });
+            }
+        }
     }
 }

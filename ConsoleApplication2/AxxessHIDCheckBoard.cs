@@ -36,6 +36,13 @@ namespace Metra.Axxess
                 && packet[5] == 0x0F
                 && packet[6] == 0xA0;
         }
+        public override bool IsASWCConfirm(byte[] packet)
+        {
+            return packet[4] == 0x01
+                && packet[5] == 0x0F
+                && packet[6] == 0xA1
+                && packet[7] == 0x01;
+        }
 
         protected override bool ParseIntroPacket(byte[] packet)
         {
@@ -101,6 +108,16 @@ namespace Metra.Axxess
             byte[] raw = new byte[59];
             Array.Copy(packet, 4, raw, 0, 59);
             this.RegisterASWCData(raw);
+        }
+
+        public override void SendASWCMappingRequest(ASWCInfo info)
+        {
+            List<byte> packet = new List<byte>(info.GetRawPacket());
+            packet.InsertRange(0, new byte[4] { 0x00, 0x55, 0xB0, 0x3B });
+            packet.Add(0x04);
+            byte csum = CalculateChecksum(packet.ToArray());
+            packet.Add(csum);
+            this.Write(new RawOutputReport(this, packet.ToArray()));
         }
     }
 }

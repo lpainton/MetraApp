@@ -21,6 +21,8 @@ namespace Metra.Axxess
 
             this.IntroPacket = this.PrepPacketWithoutCheck(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
             this.ReadyPacket = this.PrepPacketWithoutCheck(new byte[] { 0x01, 0xF0, 0x20, 0x3F, 0xEB, 0xC5 });
+            this.ASWCRequestPacket = this.PrepPacketWithoutCheck(new byte[] { 0x55, 0xB0, 0x09, 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
+            this.ASWCRequestPacket = this.PrepPacket(new byte[] { 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
         }
 
         //01 0F 20 00 CC 04
@@ -82,7 +84,7 @@ namespace Metra.Axxess
         }
 
         /// <summary>
-        /// Takes a packet and prepares it for transmission to the board.  Adds leading bytes, padding and checksum.
+        /// Takes a packet and prepares it for transmission to the board.  Adds leading bytes, padding and optional checksum.
         /// </summary>
         /// <param name="packet">The packet to prepare for sending.</param>
         /// <returns></returns>

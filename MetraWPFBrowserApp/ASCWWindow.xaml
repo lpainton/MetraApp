@@ -6,10 +6,12 @@
         <StackPanel DockPanel.Dock="Top">
             <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
                 <StackPanel Orientation="Horizontal">
-                    <Label Content="ASWC Version: " HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                    <Label Name="VersionLabel" Content="{Binding VersionString}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <!-- <Label Content="ASWC Version: " HorizontalAlignment="Left" VerticalAlignment="Top"/> -->
+                    <!-- <Label Name="VersionLabel" Content="{Binding VersionString}" HorizontalAlignment="Left" VerticalAlignment="Top"/> -->
+                    <Label Content="Speed Control: " HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <ComboBox Name="SpeedBox" ItemsSource="{Binding SpeedOptions}" SelectedIndex="{Binding SpeedControl}" HorizontalAlignment="Right" VerticalAlignment="Center" Width="100" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="100,0,0,0">
+                <StackPanel Orientation="Horizontal" Margin="50,0,0,0">
                     <Label Content="Radio Type:" HorizontalAlignment="Right" VerticalAlignment="Top"/>
                     <ComboBox Name="RadioBox" ItemsSource="{Binding RadioList}" SelectedIndex="{Binding RadioType}" HorizontalAlignment="Right" VerticalAlignment="Center" Width="120" />
                 </StackPanel>
@@ -21,8 +23,8 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Content="Save Config" Margin="0,10,0,0"  HorizontalAlignment="Center" Width="100" Click="Save_Button_Click" />
                 <Button Content="Load Config" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" Click="Load_Button_Click" />
-                <Button Content="Read from Board" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" IsEnabled="False" />
-                <Button Content="Write to Board" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" IsEnabled="False" />
+                <Button Content="Read from Board" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" Click="Read_Button_Click" />
+                <Button Content="Write to Board" Margin="10,10,0,0"  HorizontalAlignment="Center" Width="100" Click="Write_Button_Click" />
             </StackPanel>
         </StackPanel>
 

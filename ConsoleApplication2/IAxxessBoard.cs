@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
-
+    public class AxxessDeviceException : Exception
+    {
+    }
+    
     /// <summary>
     /// An enum representing the current status of the board as it regards updates and remapping.
     /// NoOp: Board is in a non-ready state
@@ -49,13 +52,23 @@ namespace Metra.Axxess
     public delegate void ASWCInfoHandler(object sender, EventArgs e);
     public delegate void ASWCConfirmHandler(object sender, EventArgs e);
 
-    class PacketEventArgs : EventArgs
+    public class PacketEventArgs : EventArgs
     {
         public byte[] Packet { get; private set; }
 
         public PacketEventArgs(byte[] packet) : base()
         {
             this.Packet = packet;
+        }
+    }
+
+    public class ASWCEventArgs : EventArgs
+    {
+        public ASWCInfo Info { get; private set; }
+
+        public ASWCEventArgs(ASWCInfo info) : base()
+        {
+            this.Info = info;
         }
     }
 

@@ -29,6 +29,16 @@ namespace Metra.Axxess
         TemperatureDown
     };
 
+    public enum ResponseError
+    {
+        GOOD = 0x00,
+        FAILURE_RADIO_ID = 0xA2,
+        FAILURE_STALK = 0xA4,
+        FAILURE_PRESS_HOLD = 0xA6,
+        FAILURE_PRESS_HOLD_BUTTON = 0xA7,
+        FAILURE_REMAP = 0x08
+    };
+
     public class ASWCInfo
     {
         /*        
@@ -92,6 +102,7 @@ namespace Metra.Axxess
         private Dictionary<byte, string> _carMethodList;
         public string[] MethodList { get { return _carMethodList.Values.ToArray(); } }
         public string[] StalkOptions { get { return new string[] { "Unknown", "Left", "Right" }; } }
+        public string[] SpeedOptions { get { return new string[] { "Off", "Low", "Medium", "High"}; } }
 
         public int VersionMajor { get; set; }
         public int VersionMinor { get; set; }
@@ -110,6 +121,7 @@ namespace Metra.Axxess
             }
         }
 
+        public byte SpeedControl { get; set; }
         public byte RadioType { get; set; }
         public byte CarCommBus { get; set; }
         public byte CarFlavor { get; set; }
@@ -220,7 +232,7 @@ namespace Metra.Axxess
 
         public ASWCInfo(byte[] raw) : this()
         {
-            this._rawPacket = raw;
+            this._rawPacket = raw;   
             ProcessRawPacket(raw);
         }
 
@@ -251,6 +263,24 @@ namespace Metra.Axxess
             return flags;
         }
 
+        private void UpdatePHFlags()
+        {
+            int ph1 = 0, ph2 = 0, ph3 = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                ph3 += this.PressHoldFlags[i] ? 1 << i : 0;
+                ph2 += this.PressHoldFlags[i + 8] ? 1 << i : 0;
+            }
+
+            ph1 += this.PressHoldFlags[16] ? 1 : 0;
+            ph1 += this.PressHoldFlags[17] ? 2 : 0;
+            ph1 += this.PressHoldFlags[18] ? 4 : 0;
+
+            this._phFlag1 = (byte)ph1;
+            this._phFlag2 = (byte)ph2;
+            this._phFlag3 = (byte)ph3;
+        }
+
         private byte[] ParseButtonValues(byte[] raw, int offset)
         {
             byte[] values = new byte[this.ButtonList.Length - 1];
@@ -260,6 +290,44 @@ namespace Metra.Axxess
                 values[i] = raw[i + offset];
             }
             return values;
+        }
+
+        public byte[] GetRawPacket()
+        {
+            byte[] packet = new byte[59];
+
+            packet[0] = 0x01;
+            packet[1] = 0xF0;
+            packet[2] = 0xA1;
+
+            packet[3] = 0x01;
+
+            packet[6] = this.RadioType;
+
+            packet[13] = (byte)(this.StalkPresent ? 0x01 : 0x00);
+            packet[14] = this.StalkOrientation;
+
+            UpdatePHFlags();
+            packet[15] = this._phFlag1;
+            packet[16] = this._phFlag2;
+            packet[17] = this._phFlag3;
+            packet[36] = this.SpeedControl;
+            packet[39] = (byte)(this.ButtonRemapActive ? 0x01 : 0x00);
+            packet[40] = 0x01;
+            packet[41] = 0x02;
+
+            for (int i = 0; i < this.PressHoldValues.Length; i++)
+            {
+                packet[i + 18] = this.PressHoldValues[i];
+            }
+            for (int i = 2; i < this.PressHoldValues.Length; i++)
+            {
+                packet[i + 40] = this.ButtonRemapValues[i];
+            }
+
+            packet[58] = 0xDD;
+
+            return packet;
         }
 
         public void ProcessRawPacket(byte[] raw)
@@ -279,47 +347,9 @@ namespace Metra.Axxess
             this._phFlag3 = raw[17];
             this.PressHoldFlags = this.ParsePHFlags(this._phFlag3, this._phFlag2, this._phFlag1);
             this.PressHoldValues = this.ParseButtonValues(raw, 18);
+            this.SpeedControl = raw[36];
             this.ButtonRemapActive = raw[39].Equals(0x01);
             this.ButtonRemapValues = this.ParseButtonValues(raw, 40);
-
-            /*this.PressHoldVolumeUp = raw[18];
-            this.PressHoldVolumeDown = raw[19];
-            this.PressHoldSeekUp = raw[20];
-            this.PressHoldSeekDown = raw[21];
-            this.PressHoldModeSource = raw[22];
-            this.PressHoldMute = raw[23];
-            this.PressHoldPresetUp = raw[24];
-            this.PressHoldPresetDown = raw[25];
-            this.PressHoldPower = raw[26];
-            this.PressHoldBand = raw[27];
-            this.PressHoldPlayEnter = raw[28];
-            this.PressHoldPTT = raw[29];
-            this.PressHoldOnHook = raw[30];
-            this.PressHoldOffHook = raw[31];
-            this.PressHoldFanUp = raw[32];
-            this.PressHoldFanDown = raw[33];
-            this.PressHoldTempUp = raw[34];
-            this.PressHoldTempDown = raw[35];*/
-
-
-            /*this.VolumeUp = raw[40];
-            this.VolumeDown = raw[41];
-            this.SeekUp = raw[42];
-            this.SeekDown = raw[43];
-            this.ModeSource = raw[44];
-            this.Mute = raw[45];
-            this.PresetUp = raw[46];
-            this.PresetDown = raw[47];
-            this.Power = raw[48];
-            this.Band = raw[49];
-            this.PlayEnter = raw[50];
-            this.PTT = raw[51];
-            this.OnHook = raw[52];
-            this.OffHook = raw[53];
-            this.FanUp = raw[54];
-            this.FanDown = raw[55];
-            this.TempUp = raw[56];
-            this.TempDown = raw[57];*/
         }
 
         public ASWCInfo Clone()

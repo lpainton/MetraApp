@@ -92,7 +92,7 @@ namespace Metra.Axxess
                         board.Port.Read(buffer, 0, bytes);
                         foreach (byte b in buffer)
                         {
-                            Console.Write("{0} ", b);
+                            Console.Write("{0:x2} ", b);
                             if (b == 0x41)
                             {
                                 //Console.WriteLine("Ack!");

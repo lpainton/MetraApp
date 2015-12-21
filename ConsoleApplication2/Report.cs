@@ -59,6 +59,22 @@ namespace Metra.Axxess
 				return m_nLength;
 			}
 		}
+
+        public static void PrintReport(Report r)
+        {
+            byte[] packet = r.Buffer;
+            PrintBuffer(packet);
+        }
+
+        public static void PrintBuffer(byte[] packet)
+        {
+            if (packet.Length > 0)
+            {
+                foreach (byte b in packet)
+                    Console.Write("{0:x2}, ", b);
+                Console.WriteLine();
+            }
+        }
 	}
 	/// <summary>
 	/// Defines a base class for output reports. To use output reports, just put the bytes into the raw buffer.

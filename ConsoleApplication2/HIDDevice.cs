@@ -164,6 +164,8 @@ namespace Metra.Axxess
 		/// <param name="oOutRep">Output report to write</param>
         public void Write(OutputReport oOutRep)
         {
+            Console.Write("Outgoing Report: ");
+            Report.PrintReport(oOutRep);
 			try
 			{
 				m_oFile.Write(oOutRep.Buffer, 0, oOutRep.BufferLength);
