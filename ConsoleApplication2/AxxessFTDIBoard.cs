@@ -46,10 +46,8 @@ namespace Metra.Axxess
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine("Product ID: " + this.ProductID);
-                sb.AppendLine("App Ver: " + this.AppFirmwareVersion);
-                sb.AppendLine("Boot Ver: " + this.BootFirmwareVersion);
-                sb.AppendLine("Baud Rate: " + this.BaudRate.ToString());
+                sb.AppendFormat("Product ID: {0}, App Ver: {1}, Boot Ver: {2}, Baud Rate: {3}", 
+                    this.ProductID, this.AppFirmwareVersion, this.BootFirmwareVersion, this.BaudRate.ToString());
                 return sb.ToString();
             }
         }
@@ -88,6 +86,7 @@ namespace Metra.Axxess
         protected virtual void Initialize()
         {
             this.Type = BoardType.FTDI;
+            this.OnIntro += ParseIntroPacket;
             this.FTDIDevice.OpenPortForAxxess(this.BaudRate);
             this.BeginAsyncRead();
         }
@@ -130,10 +129,10 @@ namespace Metra.Axxess
         /// </summary>
         /// <param name="packet">The received packet</param>
         /// <returns>True of intro packet, else false</returns>
-        protected virtual bool ParseIntroPacket(byte[] packet)
+        protected virtual void ParseIntroPacket(object sender, PacketEventArgs args)
         {
             //Parse packet into characters
-            //Stack<byte> packetStack = new Stack<byte>(packet);
+            byte[] packet = args.Packet;
             StringBuilder sb = new StringBuilder();
             foreach (byte b in packet)
             {
@@ -146,7 +145,7 @@ namespace Metra.Axxess
             string content = sb.ToString();
 
             if (content.Equals(String.Empty) || !content.Contains("CWI"))
-                return false;
+                return;
 
             string[] words = content.Split(new char[] {' ', '\n', '\t'}, StringSplitOptions.RemoveEmptyEntries);
 
@@ -154,13 +153,13 @@ namespace Metra.Axxess
             this.BootFirmwareVersion = words[1];
             if (words.Length > 2)
                 this.AppFirmwareVersion = words[2];
-
-            return true;
+            this.OnIntro -= ParseIntroPacket;
+            return;
         }
-        protected virtual bool ProcessIntroPacket(byte[] packet)
+        /*protected virtual bool ProcessIntroPacket(byte[] packet)
         {
-            return this.ParseIntroPacket(packet);
-        }        
+            this.ParseIntroPacket(packet);
+        }*/        
 
         //Event related stuff
         public virtual bool IsAck(byte[] packet) 
@@ -184,16 +183,25 @@ namespace Metra.Axxess
         {
             //byte[] packet = InRep.Buffer;
 
-            if (this.ProductID.Equals(String.Empty))
+            if (OnPacket != null)
+            {
+                OnPacketReceived(new PacketEventArgs(packet));
+            }
+            if (OnIntro != null)
+            {
+                OnIntroReceived(new PacketEventArgs(packet));
+            }
+
+            /*if (this.ProductID.Equals(String.Empty))
             {
                 if (this.ProcessIntroPacket(packet))
                     this.OnIntroReceived(new PacketEventArgs(packet));
-            }
+            }*/
 
-            else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
-            else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
-            foreach (byte b in packet) { Console.Write("{0} ", Convert.ToChar(b)); }
-            Console.WriteLine();
+            //else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
+            //else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
+            //foreach (byte b in packet) { Console.Write("{0} ", Convert.ToChar(b)); }
+            //Console.WriteLine();
 
         }
         protected virtual void HandleDeviceRemoved()
@@ -246,13 +254,15 @@ namespace Metra.Axxess
         public event IntroEventHandler OnIntro;
         public event AckEventHandler OnAck;
         public event FinalEventHandler OnFinal;
-        public event ASWCInfoHandler OnASWCInfo;
+        //public event ASWCInfoHandler OnASWCInfo;
         public event EventHandler OnDeviceRemoved;
+        public event PacketHandler OnPacket;
 
-        public virtual void OnIntroReceived(EventArgs e) { if (OnIntro != null) OnIntro(this, e); }
-        public virtual void OnAckReceived(EventArgs e) { if (OnAck != null) OnAck(this, e); }
-        public virtual void OnFinalReceived(EventArgs e) { if (OnFinal != null) OnFinal(this, e); }
-        public virtual void OnASWCInfoReceieved(EventArgs e) { if (OnASWCInfo != null) OnASWCInfo(this, e); }
+        public virtual void OnIntroReceived(PacketEventArgs e) { OnIntro(this, e); }
+        public virtual void OnAckReceived(EventArgs e) { OnAck(this, e); }
+        public virtual void OnFinalReceived(EventArgs e) { OnFinal(this, e); }
+        //public virtual void OnASWCInfoReceieved(EventArgs e) { if (OnASWCInfo != null) OnASWCInfo(this, e); }
+        public virtual void OnPacketReceived(PacketEventArgs e) { OnPacket(this, e); }
         #endregion 
 
         #region Explicit IAxxessDevice Implementation
@@ -270,7 +280,7 @@ namespace Metra.Axxess
 
         void IAxxessBoard.SendIntroPacket() { this.SendIntroPacket(); }
         void IAxxessBoard.SendReadyPacket() { this.SendReadyPacket(); }
-        void IAxxessBoard.SendASWCMappingPacket(ASWCInfo map) { throw new NotImplementedException(); }
+        void IAxxessBoard.SendASWCMappingPacket(ASWCInfo map, IList<SectionChanged> list) { throw new NotImplementedException(); }
         void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
         void IAxxessBoard.SendPacket(byte[] packet) { this.Write(packet); }
         void IAxxessBoard.SendRawPacket(byte[] packet) { this.Write(packet); }
@@ -284,8 +294,10 @@ namespace Metra.Axxess
         void IAxxessBoard.RemoveFinalEvent(FinalEventHandler handler) { this.OnFinal -= handler; }
         void IAxxessBoard.AddRemovedEvent(EventHandler handler) { this.OnDeviceRemoved += handler; }
         void IAxxessBoard.RemoveRemovedEvent(EventHandler handler) { this.OnDeviceRemoved -= handler; }
-        void IAxxessBoard.AddASWCInfoEvent(ASWCInfoHandler handler) { this.OnASWCInfo += handler; }
-        void IAxxessBoard.RemoveASWCInfoEvent(ASWCInfoHandler handler) { this.OnASWCInfo -= handler; }
+        void IAxxessBoard.AddASWCInfoEvent(ASWCInfoHandler handler) { return; }
+        void IAxxessBoard.RemoveASWCInfoEvent(ASWCInfoHandler handler) { return; }
+        void IAxxessBoard.AddPacketEvent(PacketHandler handler) { this.OnPacket += handler; }
+        void IAxxessBoard.RemovePacketEvent(PacketHandler handler) { this.OnPacket -= handler; }
 
         void IAxxessBoard.AddASWCConfimEvent(ASWCConfirmHandler handler)
         {

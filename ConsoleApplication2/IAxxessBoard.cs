@@ -46,11 +46,12 @@ namespace Metra.Axxess
         ASWCConfirm
     };
 
-    public delegate void IntroEventHandler(object sender, EventArgs e);
+    public delegate void IntroEventHandler(object sender, PacketEventArgs e);
     public delegate void AckEventHandler(object sender, EventArgs e);
     public delegate void FinalEventHandler(object sender, EventArgs e);
     public delegate void ASWCInfoHandler(object sender, EventArgs e);
     public delegate void ASWCConfirmHandler(object sender, EventArgs e);
+    public delegate void PacketHandler(object sender, PacketEventArgs e);
 
     public class PacketEventArgs : EventArgs
     {
@@ -127,7 +128,7 @@ namespace Metra.Axxess
         /// <summary>
         /// Sends an ASWC write packet to attempt button remap.
         /// </summary>
-        void SendASWCMappingPacket(ASWCInfo map);
+        void SendASWCMappingPacket(ASWCInfo map, IList<SectionChanged> changes);
 
         /// <summary>
         /// Sends the provided packet.
@@ -176,6 +177,12 @@ namespace Metra.Axxess
         /// </summary>
         void AddASWCConfimEvent(ASWCConfirmHandler handler);
         void RemoveASWCConfimEvent(ASWCConfirmHandler handler);
+
+        /// <summary>
+        /// General event fired whenever a packet is received.
+        /// </summary>
+        void AddPacketEvent(PacketHandler handler);
+        void RemovePacketEvent(PacketHandler handler);
 
         void Dispose();
     }

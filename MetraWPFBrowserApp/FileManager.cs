@@ -16,15 +16,20 @@ namespace MetraWPFBrowserApp
     /// </summary>
     public class FileManager
     {
+        const string APP_FOLDER = "Metra";
         const string MAPS_FOLDER = "maps";
         const string CONFIG_FILE = "appconfig.cfg";
         const string FIRMWARE_FOLDER = "firmware";
         const string FIRMWARE_ARCHIVE = "firmware.zip";
         const string FIRMWARE_MANIFEST = "firmware.txt";
+        const string LOGS_FOLDER = "logs";
         const string MANIFEST_URL = "http://axxessupdater.com/admin/secure/manifest-request.php";
         const string BATCH_URL = "http://axxessupdater.com/admin/secure/batch-download.php";
+        const string FIRMWARE_CHECK_URL = "http://axxessupdater.com/admin/secure/data-request.php?id={0}&v=&d=iPhone";
 
+        public string AppDataFolder { get; set; }
         public string FirmwareFolder { get; set; }
+        public string LogsFolder { get; set; }
         public string MapFolder { get; set; }
         public string ManifestFile { get; set; }
         public string FirmwareArchive { get; set; }
@@ -35,10 +40,14 @@ namespace MetraWPFBrowserApp
 
         public FileManager()
         {
-            FirmwareFolder = FIRMWARE_FOLDER;
-            MapFolder = MAPS_FOLDER;
-            ManifestFile = FIRMWARE_MANIFEST;
-            FirmwareArchive = FIRMWARE_ARCHIVE;
+            string appsFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            AppDataFolder = Path.Combine(appsFolder, APP_FOLDER);
+
+            FirmwareFolder = Path.Combine(AppDataFolder, FIRMWARE_FOLDER);
+            LogsFolder = Path.Combine(AppDataFolder, LOGS_FOLDER);
+            MapFolder = Path.Combine(AppDataFolder, MAPS_FOLDER);
+            ManifestFile = Path.Combine(AppDataFolder, FIRMWARE_MANIFEST);
+            FirmwareArchive = Path.Combine(AppDataFolder, FIRMWARE_ARCHIVE);
             ManifestURL = MANIFEST_URL;
             BatchURL = BATCH_URL;
 
@@ -69,6 +78,9 @@ namespace MetraWPFBrowserApp
         /// <param name="folder">Path to directory</param>
         public DirectoryInfo CreateDirectory(string path)
         {
+            if (Directory.Exists(path))
+                return new DirectoryInfo(path);
+
             DirectorySecurity dsec = new DirectorySecurity();
             dsec.AddAccessRule(new FileSystemAccessRule(
                 System.Security.Principal.WindowsIdentity.GetCurrent().Name,
@@ -112,7 +124,7 @@ namespace MetraWPFBrowserApp
                 {
                     string version = entry[1];
                     string filename = entry[2];
-                    return new Metra.Axxess.AxxessFirmwareToken(filename, version);
+                    return new Metra.Axxess.AxxessFirmwareToken(filename, version, boardID);
                 }
             }
             return Metra.Axxess.AxxessFirmwareToken.Null;
@@ -150,6 +162,21 @@ namespace MetraWPFBrowserApp
             {
                 return Path.GetFullPath(FIRMWARE_FOLDER + "\\" + firmware);
             }
+        }
+
+        class FirmwareDownloadToken
+        {
+            public string ua { get; set; }
+            public string url { get; set; }
+        }
+
+        public void DownloadFirmwareDirectly(Metra.Axxess.AxxessFirmwareToken token)
+        {
+            string url = String.Format(FIRMWARE_CHECK_URL, token.BoardID);
+            string res = Web.DownloadString(url);
+
+            FirmwareDownloadToken tok = (FirmwareDownloadToken)Newtonsoft.Json.JsonConvert.DeserializeObject<FirmwareDownloadToken>(res);
+            Web.DownloadFile(tok.url, Path.GetFullPath(FIRMWARE_FOLDER + "\\" + token.FileName));
         }
 
         public void UnpackFirmwareArchive()

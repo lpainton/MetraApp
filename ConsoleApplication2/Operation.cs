@@ -42,8 +42,20 @@ namespace Metra.Axxess
         }
     }
 
+    public class OperationEventArgs : EventArgs
+    {
+        public OperationEventArgs() : base()
+        {
+
+        }
+    }
+
+    public delegate void OperationCompletedHandler(object sender, OperationEventArgs args);
+
     abstract class Operation : IOperation
-    {    
+    {
+        public event OperationCompletedHandler Completed;
+
         public OperationStatus Status { get; protected set; }
         public String Message { get; protected set; }
         public OperationType Type { get; protected set; }
@@ -126,6 +138,12 @@ namespace Metra.Axxess
         {
             return;
         }
+
+        public virtual void OnCompleted()
+        {
+            if (Completed != null)
+                Completed(this, new OperationEventArgs());
+        }
     
         #region Explicit IOperation Implementation
         OperationStatus IOperation.Status
@@ -172,6 +190,9 @@ namespace Metra.Axxess
         {
             this.Stop();
         }
+
+        void IOperation.AddCompletedHandler(OperationCompletedHandler handler) { this.Completed += handler; }
+        void IOperation.RemoveCompletedHandler(OperationCompletedHandler handler) { this.Completed -= handler; }
         #endregion
     }
 }

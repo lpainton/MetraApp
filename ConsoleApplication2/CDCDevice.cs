@@ -119,7 +119,7 @@ namespace Metra.Axxess
             SelectQuery sq = new SelectQuery("Win32_PnPEntity");
             ManagementObjectSearcher searcher = new ManagementObjectSearcher(sq);
 
-            TestConsoleWrite("Port not initialized, searching for port...");
+            Log.Write("Port not initialized, searching for port...", LogMode.Verbose);
             foreach (ManagementObject port in searcher.Get())
             {
                 string name = port["Name"].ToString();
@@ -127,12 +127,12 @@ namespace Metra.Axxess
                 {
                     List<char> n = new List<char>(name.ToCharArray());
                     string portName = "COM" + new string(n.FindAll(c => char.IsDigit(c)).ToArray());
-                    TestConsoleWrite("CDC device found at " + portName);
+                    Log.Write("CDC device found at " + portName, LogMode.Verbose);
                     return portName;
                 }
             }
 
-            TestConsoleWrite("CDC COM port not found!");
+            Log.Write("CDC COM port not found!", LogMode.Verbose);
             throw new System.IO.IOException("No CDC COM port identified!");
         }
 
@@ -142,27 +142,27 @@ namespace Metra.Axxess
 
             while (!_serialPort.IsOpen)
             {
-                TestConsoleWrite("Openning serial port...");
+                Log.Write("Openning serial port...", LogMode.Verbose);
                 try
                 {
                     _serialPort.Open();
-                    TestConsoleWrite("Success!");
+                    Log.Write("Successfully openned port!", LogMode.Verbose);
                 }
                 catch (System.IO.IOException e)
                 {
-                    TestConsoleWrite(e.Message);
+                    Log.Write("Error: " + e.Message);
                 }
                 Thread.Sleep(100);
             }
 
-            TestConsoleWrite("Beginning read thread...");
+            Log.Write("Beginning read thread...", LogMode.Verbose);
             try
             {
                 BeginAsyncRead();
             }
             catch (System.IO.IOException e)
             {
-                TestConsoleWrite(e.Message);
+                Log.Write("Error: " + e.Message);
             }
         }
 
@@ -233,7 +233,7 @@ namespace Metra.Axxess
             try
             {
                 byte b = Convert.ToByte(_serialPort.ReadByte());
-                TestConsoleWrite(b.ToString() + " " + Convert.ToInt32(b).ToString() + " " + Convert.ToChar(b).ToString());
+                Log.Write(b.ToString() + " " + Convert.ToInt32(b).ToString() + " " + Convert.ToChar(b).ToString());
                 return b;
             }
             catch (System.IO.IOException)
@@ -255,7 +255,6 @@ namespace Metra.Axxess
         {
             if (this._serialPort.IsOpen)
             {
-                TestConsoleWrite("Writing packet...");
                 try
                 {
                     this._serialPort.Write(packet, 0, packet.Length);
@@ -264,7 +263,6 @@ namespace Metra.Axxess
                 {
                     HandleDeviceRemoved();
                 }
-                TestConsoleWrite("Packet writing successful.");
             }
             else
             {
@@ -284,7 +282,7 @@ namespace Metra.Axxess
             }
             catch (System.IO.IOException)
             {
-                TestConsoleWrite("Error trying to close port.");
+                Log.Write("Error trying to close port.");
             }
             finally
             {
@@ -294,10 +292,10 @@ namespace Metra.Axxess
         }
 
         #region Test
-        void TestConsoleWrite(string s)
+        /*void TestConsoleWrite(string s)
         {
             Util.TestConsoleWrite(this.TestMode, s);
-        }
+        }*/
         public static void TestConnect()
         {
 

@@ -21,20 +21,50 @@ namespace MetraWPFBrowserApp
     /// <summary>
     /// Interaction logic for ASCWWindow.xaml
     /// </summary>
-    public partial class ASCWWindow : Window
+    public partial class ASWCWindow : Window
     {
         IAxxessBoard AttachedDevice { get; set; }
-        public ASWCInfo WorkingSet { get; set; }
+        ASWCInfo _workingSet;
+        public ASWCInfo WorkingSet 
+        { 
+            get
+            {
+                return _workingSet;
+            }
+            set
+            {
+                if (_workingSet != value)
+                {
+                    _workingSet = value;
+                }
+            }
+        }
+        List<SectionChanged> _changedSections;
+        public void MarkSectionChanged(SectionChanged section)
+        {
+            if (!_changedSections.Contains(section))
+            {
+                LogManager.WriteToLog(section.ToString() + " setting was changed by user.");
+                _changedSections.Add(section);
+            }
+        }
+        public void ClearChangedSections()
+        {
+            _changedSections.Clear();
+        }
+
         delegate void ContextDelegate();
 
-        public ASCWWindow(IAxxessBoard device)
+        public ASWCWindow(IAxxessBoard device)
         {
             InitializeComponent();
 
             AttachedDevice = device;
+            _changedSections = new List<SectionChanged>();
             WorkingSet = new ASWCInfo();
 
-            this.DataContext = WorkingSet;
+            //this.DataContext = WorkingSet;
+            SetContextToWorkingSet();
         }
 
         private void OnRendered(object sender, EventArgs e)
@@ -95,7 +125,8 @@ namespace MetraWPFBrowserApp
                 string filename = dlg.FileName;
 
                 this.WorkingSet = LoadMapFromFile(filename);
-                this.DataContext = this.WorkingSet;
+                //this.DataContext = this.WorkingSet;
+                SetContextToWorkingSet();
             }
         }
 
@@ -140,18 +171,31 @@ namespace MetraWPFBrowserApp
             }
             catch (TimeoutException)
             {
-
-                MessageBox.Show("Timed out while reading ASCW info.  Please disconnect device and try again!");
+                string msg = "Timed out while reading ASCW info.  Please disconnect device and try again!";
+                MessageBox.Show(msg);
+                LogManager.WriteToLog(msg);
+            }
+            catch (NotImplementedException ex)
+            {
+                string msg = "Button configuration is not enabled for this type of device.  Please plug in a different board.";
+                MessageBox.Show(msg);
+                LogManager.WriteToLog(msg);
             }
             finally
             {
                 this.AttachedDevice.RemoveASWCInfoEvent(handler);
-                this.DataContext = this.WorkingSet;
+                SetContextToWorkingSet();
             }
         }
 
         private void Write_Button_Click(object sender, RoutedEventArgs e)
         {
+            if (_changedSections.Count == 0)
+            {
+                MessageBox.Show("Error: No changes were made to the previous configuration!");
+                return;
+            }
+
             try 
             {
                 ConnectWithDevice(); 
@@ -175,17 +219,19 @@ namespace MetraWPFBrowserApp
 
             try
             {
-                this.AttachedDevice.SendASWCMappingPacket(this.WorkingSet);
+                this.AttachedDevice.SendASWCMappingPacket(this.WorkingSet, _changedSections);
                 bool set = waitHandle.Wait(15000);
-                if (!set) throw new TimeoutException();
+                if (!set && packet == null) throw new TimeoutException();
 
                 //Read packet for result 
                 string msg = String.Empty;
-                switch (packet[8])
+                byte resp = packet[8];
+                switch (resp)
                 {
                     //0x00 – ALL DATA IS GOOD AND RECORDED
                     case 0x00:
                         msg = "Device configuration successful!";
+                        ClearChangedSections();
                         break;
 
                     //0xA2 – RADIO TYPE NUMBER FAILURE 
@@ -229,10 +275,26 @@ namespace MetraWPFBrowserApp
                 }
 
                 MessageBox.Show(msg);
+                LogManager.WriteToLog("ASWC " + msg);
             }
-            catch (TimeoutException)
+            catch (TimeoutException ex)
             {
-                MessageBox.Show("Timed out while writing ASCW info.  Please disconnect device and try again!");
+                String msg = "Timed out while writing ASCW info.";
+                MessageBox.Show(msg + " Please disconnect device and try again!");
+                LogManager.WriteToLog(msg);
+            }
+            catch (NotImplementedException ex)
+            {
+                string msg = "Button configuration is not enabled for this type of device.";
+                MessageBox.Show(msg + " Please plug in a different board.");
+                LogManager.WriteToLog(msg);
+            }
+            catch (Exception ex)
+            {
+                string msg = "An unknown error occured!";
+                MessageBox.Show(msg);
+                LogManager.WriteToLog(ex.Message);
+                this.Close();
             }
             finally
             {
@@ -252,6 +314,7 @@ namespace MetraWPFBrowserApp
             if (this.AttachedDevice == null)
             {
                 MessageBox.Show("No device was found.  Please plug a device into the computer before retrying.");
+                LogManager.WriteToLog("No device was found.");
                 throw new AxxessDeviceException();
             }
             else
@@ -262,19 +325,31 @@ namespace MetraWPFBrowserApp
         public void OnDeviceConnect()
         {
             this.AttachedDevice.AddRemovedEvent(OnDeviceRemoved);
+            LogManager.WriteToLog("Connected to " + this.AttachedDevice.Type);
         }
         public void OnDeviceRemoved(object sender, EventArgs e)
         {
-            this.AttachedDevice.Dispose();
-            this.AttachedDevice = null;
-            this.WorkingSet = new ASWCInfo();
-            this.SetContextToWorkingSet();
+            try
+            {
+                this.AttachedDevice.Dispose();
+            }
+            catch (NullReferenceException)
+            {
+                LogManager.WriteToLog("Null reference exception on device removal.");
+            }
+            finally
+            {
+                this.AttachedDevice = null;
+                this.WorkingSet = new ASWCInfo();
+                this.SetContextToWorkingSet();
+            }
         }
         public void SetContextToWorkingSet()
         {
             if (this.Dispatcher.CheckAccess())
             {
                 this.DataContext = this.WorkingSet;
+                ClearChangedSections();
             }
             else
             {
@@ -282,6 +357,52 @@ namespace MetraWPFBrowserApp
                     new ContextDelegate(SetContextToWorkingSet),
                     System.Windows.Threading.DispatcherPriority.Normal,
                     new object[] { });
+            }
+        }
+
+        private void SpeedChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MarkSectionChanged(SectionChanged.SpeedControl);
+        }
+        private void RadioChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MarkSectionChanged(SectionChanged.Radio);
+        }
+        private void StalkOptionsChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //Console.WriteLine("Stalk changed to {0}", (sender as ComboBox).SelectedItem);
+            MarkSectionChanged(SectionChanged.Stalk);
+            if ((string)((sender as ComboBox).SelectedItem) != "Unknown")
+                StalkCheck.IsChecked = true;
+        }
+        private void StalkChanged(object sender, RoutedEventArgs e)
+        {
+            MarkSectionChanged(SectionChanged.Stalk);
+        } 
+        private void ButtonChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MarkSectionChanged(SectionChanged.Buttons);
+            if ((string)((sender as ComboBox).SelectedItem) != "Default")
+                RemapCheckBox.IsChecked = true;
+        }
+        private void RemapChanged(object sender, RoutedEventArgs e)
+        {
+            MarkSectionChanged(SectionChanged.Buttons);
+        }
+        private void PHChanged(object sender, RoutedEventArgs e)
+        {
+            MarkSectionChanged(SectionChanged.PressHold);
+        }
+        private void PHBChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MarkSectionChanged(SectionChanged.PressHold);
+            ComboBox box = (ComboBox)sender;
+            if (box.SelectedItem.ToString() != "Default")
+            {
+                //Find button selected
+                string button = WorkingSet.ButtonList.First(item => box.Name.Contains(item));
+                //Console.WriteLine(button);
+                
             }
         }
     }

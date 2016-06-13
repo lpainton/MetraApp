@@ -35,6 +35,9 @@
     <Reference Include="FTD2XX_NET">
       <HintPath>FTD2XX_NET_v1.0.14\FTD2XX_NET.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.DirectoryServices" />
@@ -55,6 +58,7 @@
     <Compile Include="AxxessCDCBoard.cs" />
     <Compile Include="CDCDevice.cs" />
     <Compile Include="FTDICable.cs" />
+    <Compile Include="ILogger.cs" />
     <Compile Include="OperationFactory.cs" />
     <Compile Include="OperationFirmware.cs" />
     <Compile Include="AxxessHIDBoard.cs" />
@@ -74,6 +78,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="data\257291_268_ASWC-USB_V320_wencrypt.hex" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

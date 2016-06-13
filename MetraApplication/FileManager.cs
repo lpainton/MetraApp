@@ -125,7 +125,7 @@ namespace MetraApplication
                 {
                     string version = entry[1];
                     string filename = entry[2];
-                    return new Metra.Axxess.AxxessFirmwareToken(filename, version);
+                    return new Metra.Axxess.AxxessFirmwareToken(filename, version, boardID);
                 }
             }
             return Metra.Axxess.AxxessFirmwareToken.Null;

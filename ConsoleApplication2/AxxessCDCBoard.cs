@@ -49,9 +49,7 @@ namespace Metra.Axxess
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine("Product ID: " + this.ProductID);
-                sb.AppendLine("App Ver: " + this.AppFirmwareVersion);
-                sb.AppendLine("Boot Ver: " + this.BootFirmwareVersion);
+                sb.AppendFormat("Product ID: {0}, App Ver: {1}, Boot Ver: {2}", this.ProductID, this.AppFirmwareVersion, this.BootFirmwareVersion);
                 return sb.ToString();
             }
         }
@@ -87,6 +85,8 @@ namespace Metra.Axxess
             this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
             this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
             this.ASWCRequestPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
+
+            this.OnIntro += ParseIntroPacket;
         }       
 
         //Atomic packet operations
@@ -108,9 +108,10 @@ namespace Metra.Axxess
         /// </summary>
         /// <param name="packet">The received packet</param>
         /// <returns>True of intro packet, else false</returns>
-        protected virtual bool ParseIntroPacket(byte[] packet)
+        protected virtual void ParseIntroPacket(object sender, PacketEventArgs args)
         {
-            Util.TestConsoleWrite(this.TestMode, "Parsing for intro packet!");
+            //Util.TestConsoleWrite(this.TestMode, "Parsing for intro packet!");
+            byte[] packet = args.Packet;
             String content = String.Empty;
             foreach (byte b in packet)
             {
@@ -121,22 +122,19 @@ namespace Metra.Axxess
             {
                 this.ProductID = content.Substring(6, 9);
                 this.AppFirmwareVersion = content.Substring(25, 3);
-                Util.TestConsoleWrite(this.TestMode, "PID: " + this.ProductID);
-                Util.TestConsoleWrite(this.TestMode, "App ver: " + this.AppFirmwareVersion);
-                return true;
+
+                Log.Write("");
+                this.OnIntro -= ParseIntroPacket;
             }
-            else { return false; }
         }
-        protected virtual bool ProcessIntroPacket(byte[] packet)
+        protected virtual void ProcessIntroPacket(byte[] packet)
         {
             //43, 57, 49 == CWI
-            if (packet.Length > 9 
-                && packet[6] == 0x43 
-                && packet[7] == 0x57 
+            if (packet.Length > 9
+                && packet[6] == 0x43
+                && packet[7] == 0x57
                 && packet[8] == 0x49)
-                return this.ParseIntroPacket(packet);
-            else
-                return false;
+                this.OnIntroReceived(new PacketEventArgs(packet));
         }
 
         public virtual byte[] PrepPacket(byte[] packet) { return packet; }
@@ -146,7 +144,7 @@ namespace Metra.Axxess
         {
             if (packet[packet.Length - 1] == 0x41)
             {
-                Util.TestConsoleWrite(this.TestMode, "Ack received!");
+                Log.Write("Ack packet received!");
                 return true;
             }
             else { return false; }
@@ -177,7 +175,7 @@ namespace Metra.Axxess
         /// <param name="oInRep">The input report containing the packet</param>
         protected override void HandleDataReceived(byte[] packet)
         {
-            Util.TestConsoleWrite(this.TestMode, "Handling received packet...");
+            /*Util.TestConsoleWrite(this.TestMode, "Handling received packet...");
             Report.PrintBuffer(packet);
             if (TestMode)
             {
@@ -187,14 +185,14 @@ namespace Metra.Axxess
                     sb.Append(Convert.ToChar(b));
                 }
                 Util.TestConsoleWrite(TestMode, sb.ToString());
-            }
+            }*/
 
-            if (this.ProductID.Equals(String.Empty))
-            {
-                if (this.ProcessIntroPacket(packet))
-                    this.OnIntroReceived(new PacketEventArgs(packet));
-            }
-            else if (this.OnAck != null && this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
+            if (OnPacket != null)
+                OnPacketReceieved(new PacketEventArgs(packet));
+            if (OnIntro != null)
+                ProcessIntroPacket(packet);
+
+            if (this.OnAck != null && this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
             else if (this.OnFinal != null && this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
             
             if (this.OnASWCInfo != null && this.IsASWCRead(packet)) this.OnASWCInfoReceieved(new ASWCEventArgs(new ASWCInfo(packet)));
@@ -215,11 +213,13 @@ namespace Metra.Axxess
         public event AckEventHandler OnAck;
         public event FinalEventHandler OnFinal;
         public event ASWCInfoHandler OnASWCInfo;
+        public event PacketHandler OnPacket;
 
-        public virtual void OnIntroReceived(EventArgs e) { if (OnIntro != null) OnIntro(this, e); }
-        public virtual void OnAckReceived(EventArgs e) { if (OnAck != null) OnAck(this, e); }
-        public virtual void OnFinalReceived(EventArgs e) { if (OnFinal != null) OnFinal(this, e); }
-        public virtual void OnASWCInfoReceieved(EventArgs e) { if (OnASWCInfo != null) OnASWCInfo(this, e); }
+        public virtual void OnIntroReceived(PacketEventArgs e) { OnIntro(this, e); }
+        public virtual void OnAckReceived(EventArgs e) { OnAck(this, e); }
+        public virtual void OnFinalReceived(EventArgs e) { OnFinal(this, e); }
+        public virtual void OnASWCInfoReceieved(EventArgs e) { OnASWCInfo(this, e); }
+        public virtual void OnPacketReceieved(PacketEventArgs e) { OnPacket(this, e); }
         #endregion 
 
         #region Explicit IAxxessDevice Implementation
@@ -237,7 +237,7 @@ namespace Metra.Axxess
         
         void IAxxessBoard.SendIntroPacket() { this.SendIntroPacket(); }
         void IAxxessBoard.SendReadyPacket() { this.SendReadyPacket(); }
-        void IAxxessBoard.SendASWCMappingPacket(ASWCInfo map) { throw new NotImplementedException(); }
+        void IAxxessBoard.SendASWCMappingPacket(ASWCInfo map, IList<SectionChanged> list) { throw new NotImplementedException("Mapping not yet implemented for CDC!"); }
         void IAxxessBoard.SendASWCRequestPacket() { this.SendASWCRequestPacket(); }
         void IAxxessBoard.SendPacket(byte[] packet) { this.Write(packet); }
         void IAxxessBoard.SendRawPacket(byte[] packet) { this.Write(packet); }
@@ -253,6 +253,8 @@ namespace Metra.Axxess
         void IAxxessBoard.RemoveRemovedEvent(EventHandler handler) { this.OnDeviceRemoved -= handler; }
         void IAxxessBoard.AddASWCInfoEvent(ASWCInfoHandler handler) { this.OnASWCInfo += handler; }
         void IAxxessBoard.RemoveASWCInfoEvent(ASWCInfoHandler handler) { this.OnASWCInfo -= handler; }
+        void IAxxessBoard.AddPacketEvent(PacketHandler handler) { this.OnPacket += handler; }
+        void IAxxessBoard.RemovePacketEvent(PacketHandler handler) { this.OnPacket -= handler; }
 
         void IAxxessBoard.AddASWCConfimEvent(ASWCConfirmHandler handler)
         {

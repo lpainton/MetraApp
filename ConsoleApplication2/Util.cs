@@ -23,9 +23,9 @@ namespace Metra.Axxess
             return result;
         }
 
-        public static void TestConsoleWrite(bool testMode, string s)
+        /*public static void TestConsoleWrite(bool testMode, string s)
         {
             if (testMode) Console.WriteLine(s);
-        }
+        }*/
     }
 }

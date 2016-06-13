@@ -23,6 +23,8 @@ namespace Metra.Axxess
             this.ReadyPacket = this.PrepPacketWithoutCheck(new byte[] { 0x01, 0xF0, 0x20, 0x3F, 0xEB, 0xC5 });
             this.ASWCRequestPacket = this.PrepPacketWithoutCheck(new byte[] { 0x55, 0xB0, 0x09, 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
             this.ASWCRequestPacket = this.PrepPacket(new byte[] { 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
+
+            this.OnIntro += ParseIntroPacket;
         }
 
         //01 0F 20 00 CC 04
@@ -59,12 +61,13 @@ namespace Metra.Axxess
             base.HandleDataReceived(InRep);
         }
 
-        protected override bool ProcessIntroPacket(byte[] packet)
+        /*protected override bool ProcessIntroPacket(byte[] packet)
         {
             return (this.ParseIntroPacket(packet));
-        }
-        protected override bool ParseIntroPacket(byte[] packet)
+        }*/
+        protected override void ParseIntroPacket(object sender, PacketEventArgs args)
         {
+            byte[] packet = args.Packet;
             //Parse packet into characters
             String content = String.Empty;
             foreach (byte b in packet)
@@ -78,9 +81,8 @@ namespace Metra.Axxess
             {
                 this.ProductID = content.Substring(7, 9);
                 this.AppFirmwareVersion = content.Substring(26, 2);
-                return true;
+                this.OnIntro -= ParseIntroPacket;
             }
-            else { return false; }
         }
 
         /// <summary>

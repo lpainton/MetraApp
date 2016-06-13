@@ -380,6 +380,8 @@ namespace Metra.Axxess
                 this.Device.RemoveAckEvent(AckRxHandler);
                 this.Device.RemoveFinalEvent(FinalRxHandler);
             }
+
+            OnCompleted();
         }
 
         //Flag events

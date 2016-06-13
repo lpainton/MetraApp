@@ -213,7 +213,7 @@ namespace MetraApplication
 
             if (result == DialogResult.OK)
             {
-                this.UpdateFromFile(fileDialog.FileName, new AxxessFirmwareToken(fileDialog.FileName, String.Empty));
+                this.UpdateFromFile(fileDialog.FileName, new AxxessFirmwareToken(fileDialog.FileName, String.Empty, String.Empty));
             }
         }
 

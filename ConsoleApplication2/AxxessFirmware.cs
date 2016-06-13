@@ -7,6 +7,20 @@ using System.IO;
 
 namespace Metra.Axxess
 {
+    public class AxxessFirmwareInfo
+    {
+        public string ua { get; set; }
+        public string url { get; set; }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("UA:" + ua);
+            sb.AppendLine("Url:" + url);
+            return sb.ToString();
+        }
+    }
+
     public class AxxessFirmwareVersion : IComparable
     {
         protected int MajorVer { get; set; }
@@ -71,11 +85,13 @@ namespace Metra.Axxess
     {
         public string FileName { get; set; }
         public AxxessFirmwareVersion FileVersion { get; set; }
+        public string BoardID { get; set; }
 
-        public AxxessFirmwareToken(string name, string ver)
+        public AxxessFirmwareToken(string name, string ver, string boardid)
         {
             FileName = name;
             FileVersion = new AxxessFirmwareVersion(ver);
+            BoardID = boardid;
         }
 
         public bool IsNull { get { return FileName.Equals(String.Empty) && FileVersion.IsNull; } }
@@ -84,7 +100,7 @@ namespace Metra.Axxess
         {
             get
             {
-                return new AxxessFirmwareToken(String.Empty, String.Empty);
+                return new AxxessFirmwareToken(String.Empty, String.Empty, String.Empty);
             }
         }
     }

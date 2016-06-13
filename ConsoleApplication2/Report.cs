@@ -75,6 +75,32 @@ namespace Metra.Axxess
                 Console.WriteLine();
             }
         }
+
+        public static void EnumerateBuffer(byte[] packet)        
+        {
+            for (int i = 0; i < packet.Length; i++)
+            {
+                Console.WriteLine("{0}) {1:x2}", i, packet[i]);
+            }
+        }
+
+        public static void CharacterizeBuffer(byte[] packet)
+        {
+            for (int i = 0; i < packet.Length; i++)
+            {
+                Console.WriteLine("{0}) {1:x2} {2}", i, packet[i], Convert.ToChar(packet[i]));
+            }
+        }
+
+        public override string ToString()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            for (int i = 0; i < BufferLength; i++)
+            {
+                sb.AppendFormat("{1:x2} ", i, Buffer[i]);
+            }
+            return sb.ToString();
+        }
 	}
 	/// <summary>
 	/// Defines a base class for output reports. To use output reports, just put the bytes into the raw buffer.

@@ -137,6 +137,8 @@ namespace Metra.Axxess
                 {
 					InputReport oInRep = CreateInputReport();	// Create the input report for the device
 					oInRep.SetData(arrBuff);	// and set the data portion - this processes the data received into a more easily understood format depending upon the report type
+                    if (Log.Mode == LogMode.Verbose)
+                        Log.Write("Incoming HID Report: " + oInRep.ToString(), LogMode.Verbose);
                     HandleDataReceived(oInRep);	// pass the new input report on to the higher level handler
                 }
                 finally
@@ -155,7 +157,7 @@ namespace Metra.Axxess
             }
             catch (NullReferenceException ex)
             {
-
+                throw ex;
             }
         }
 		/// <summary>
@@ -164,8 +166,8 @@ namespace Metra.Axxess
 		/// <param name="oOutRep">Output report to write</param>
         public void Write(OutputReport oOutRep)
         {
-            Console.Write("Outgoing Report: ");
-            Report.PrintReport(oOutRep);
+            if (Log.Mode == LogMode.Verbose)
+                Log.Write("Outgoing HID Report: " + oOutRep.ToString(), LogMode.Verbose);
 			try
 			{
 				m_oFile.Write(oOutRep.Buffer, 0, oOutRep.BufferLength);

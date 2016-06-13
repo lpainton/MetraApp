@@ -13,5 +13,17 @@ namespace MetraWPFBrowserApp
     /// </summary>
     public partial class App : Application
     {
+        public void LogExceptionHandler(object s, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs args)
+        {
+            Exception e = args.Exception;
+            LogManager.WriteToLog("Exception " + e.GetType().ToString() + " occured with message: " + e.Message);
+            MessageBox.Show("Exception " + e.GetType().ToString() + " occured with message: " + e.Message);
+            LogManager.FlushLog();
+        }
+        public void LogExitHandler(object s, ExitEventArgs args)
+        {
+            LogManager.WriteToLog("Application exited.");
+            LogManager.FlushLog();
+        }
     }
 }

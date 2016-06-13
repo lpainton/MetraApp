@@ -45,24 +45,33 @@ namespace MetraWPFBrowserApp
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
+            LogManager.WriteToLog("Connect button clicked.");
             this.App.OnConnectButtonClick();
         }
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
+            LogManager.WriteToLog("Update button clicked.");
             this.App.OnUpdateButtonClick();
         }
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
+            LogManager.WriteToLog("Load button clicked.");
             this.App.OnLoadButtonClick();
         }
         private void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
+            LogManager.WriteToLog("Configure button clicked.");
             this.App.OnConfigButtonClick();
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
             this.App.OnClose();
+        }
+
+        private void AboutButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.App.OnAboutButtonClick();
         }
 
 

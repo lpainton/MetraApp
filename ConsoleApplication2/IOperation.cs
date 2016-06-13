@@ -39,5 +39,7 @@ namespace Metra.Axxess
         Exception Error { get; }
         void Start();
         void Stop();
+        void AddCompletedHandler(OperationCompletedHandler handler);
+        void RemoveCompletedHandler(OperationCompletedHandler handler);
     }
 }

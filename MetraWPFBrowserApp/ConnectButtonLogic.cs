@@ -89,11 +89,12 @@ namespace MetraWPFBrowserApp
             }
         }
 
-        public void OnClick(out IAxxessBoard board)
+        public void OnClick()
         {
+            LogManager.WriteToLog("Loading connection form.");
             ConnectionForm c = new ConnectionForm();
             c.ShowDialog();
-            board = c.Device;
+            BoardManager.SetConnectedBoard(c.Device);
             c.Dispose();
         }
     }

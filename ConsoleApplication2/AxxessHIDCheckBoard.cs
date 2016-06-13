@@ -17,6 +17,8 @@ namespace Metra.Axxess
         protected override void Initialize()
         {
             this.Type = BoardType.HIDChecksum;
+            Log.Write("Initialized HID-1 board.", LogMode.Verbose);
+            this.OnIntro += ParseIntroPacket;
         }
 
         public override bool IsAck(byte[] packet) 
@@ -44,8 +46,10 @@ namespace Metra.Axxess
                 && packet[7] == 0x01;
         }
 
-        protected override bool ParseIntroPacket(byte[] packet)
+        protected override void ParseIntroPacket(object sender, PacketEventArgs args)
         {
+            byte[] packet = args.Packet;
+
             //Parse packet into characters
             String content = String.Empty;
             foreach (byte b in packet)
@@ -57,14 +61,9 @@ namespace Metra.Axxess
             {
                 this.ProductID = content.Substring(10, 9);
                 this.AppFirmwareVersion = content.Substring(29, 3);
-                return true;
+                Log.Write("Intro packet parsed " + this.Info, LogMode.Verbose);
+                this.OnIntro -= ParseIntroPacket;
             }
-            else { return false; }
-        }
-
-        protected override bool ProcessIntroPacket(byte[] packet)
-        {
-            return ParseIntroPacket(packet);
         }
 
         /// <summary>
@@ -94,6 +93,18 @@ namespace Metra.Axxess
 
             return newPacket;
         }
+        protected override byte[] PrepASWCRequestPacket(byte[] packet)
+        {
+            //0x55, 0xB0, 0x09, 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04
+            //byte[] newPacket = new byte[59];
+            byte[] newPacket = new byte[64];
+
+            //Add content bytes
+            for (int i = 0; i < packet.Length; i++)
+                newPacket[i + 1] = packet[i];
+
+            return newPacket;
+        }
 
         public override byte CalculateChecksum(byte[] packet)
         {
@@ -110,9 +121,19 @@ namespace Metra.Axxess
             this.RegisterASWCData(raw);
         }
 
-        public override void SendASWCMappingRequest(ASWCInfo info)
+        public override void SendASWCRequestPacket()
         {
-            List<byte> packet = new List<byte>(info.GetRawPacket());
+            List<byte> packet = new List<byte>(this.ASWCRequestPacket);
+            //packet.InsertRange(0, new byte[4] { 0x00, 0x55, 0xB0, 0x3B });
+            //packet.Add(0x04);
+            byte csum = CalculateChecksum(packet.ToArray());
+            packet.Add(csum);
+            this.Write(new RawOutputReport(this, packet.ToArray()));
+        }
+
+        public override void SendASWCMappingRequest(ASWCInfo info, IList<SectionChanged> list)
+        {
+            List<byte> packet = new List<byte>(info.GetRawPacket(list));
             packet.InsertRange(0, new byte[4] { 0x00, 0x55, 0xB0, 0x3B });
             packet.Add(0x04);
             byte csum = CalculateChecksum(packet.ToArray());

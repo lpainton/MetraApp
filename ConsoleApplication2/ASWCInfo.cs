@@ -6,7 +6,17 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
-    public enum ASCWButtonTypes
+    public enum SectionChanged
+    {
+        Radio = 0x01,
+        Car = 0x02,
+        Stalk = 0x04,
+        PressHold = 0x08,
+        Buttons = 0x10,
+        SpeedControl = 0x20
+    };
+
+    public enum ASWCButtonTypes
     {
         Default,
         VolumeUp,
@@ -94,13 +104,14 @@ namespace Metra.Axxess
         RemappingModel.tempDown = bytes[57 + add]
         */
 
-        public string[] ButtonList { get { return Enum.GetNames(typeof(ASCWButtonTypes)); } }
+        public string[] ButtonList { get { return Enum.GetNames(typeof(ASWCButtonTypes)); } }
         private Dictionary<byte, string> _radioList;
         public string[] RadioList { get { return _radioList.Values.ToArray(); } }
         private Dictionary<byte, string> _carBusList;
         public string[] BusList { get { return _carBusList.Values.ToArray(); } }
         private Dictionary<byte, string> _carMethodList;
         public string[] MethodList { get { return _carMethodList.Values.ToArray(); } }
+
         public string[] StalkOptions { get { return new string[] { "Unknown", "Left", "Right" }; } }
         public string[] SpeedOptions { get { return new string[] { "Off", "Low", "Medium", "High"}; } }
 
@@ -176,6 +187,7 @@ namespace Metra.Axxess
 
         public ASWCInfo()
         {
+
             //Radios
             _radioList = new Dictionary<byte, string>();
             _radioList.Add(0x00, "Unknown");
@@ -292,7 +304,7 @@ namespace Metra.Axxess
             return values;
         }
 
-        public byte[] GetRawPacket()
+        public byte[] GetRawPacket(IList<SectionChanged> changes)
         {
             byte[] packet = new byte[59];
 
@@ -300,7 +312,7 @@ namespace Metra.Axxess
             packet[1] = 0xF0;
             packet[2] = 0xA1;
 
-            packet[3] = 0x01;
+            packet[3] = (changes.Count > 0) ? ((byte)changes.Aggregate((acc, flag) => (SectionChanged)((int)acc | (int)flag))) : (byte)0x00;
 
             packet[6] = this.RadioType;
 
@@ -357,7 +369,7 @@ namespace Metra.Axxess
             return new ASWCInfo(_rawPacket);
         }
 
-        /*public string ToString()
+        public string ToString()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -371,45 +383,45 @@ namespace Metra.Axxess
             sb.AppendLine("Press & Hold - Flags 1: " + this._phFlag1.ToString());
             sb.AppendLine("Press & Hold - Flags 2: " + this._phFlag2.ToString());
             sb.AppendLine("Press & Hold - Flags 3: " + this._phFlag3.ToString());
-            sb.AppendLine("Press & Hold - Volume Up: " + this.PressHoldVolumeUp.ToString());
-            sb.AppendLine("Press & Hold - Volume Down: " + this.PressHoldVolumeDown.ToString());
-            sb.AppendLine("Press & Hold - Seek Up: " + this.PressHoldSeekUp.ToString());
-            sb.AppendLine("Press & Hold - Seek Down: " + this.PressHoldSeekDown.ToString());
-            sb.AppendLine("Press & Hold - Mode Or Source: " + this.PressHoldModeSource.ToString());
-            sb.AppendLine("Press & Hold - Mute: " + this.PressHoldMute.ToString());
-            sb.AppendLine("Press & Hold - Preset Up: " + this.PressHoldPresetUp.ToString());
-            sb.AppendLine("Press & Hold - Preset Down: " + this.PressHoldPresetDown.ToString());
-            sb.AppendLine("Press & Hold - Power: " + this.PressHoldPower.ToString());
-            sb.AppendLine("Press & Hold - Band: " + this.PressHoldBand.ToString());
-            sb.AppendLine("Press & Hold - Play Or Enter: " + this.PressHoldPlayEnter.ToString());
-            sb.AppendLine("Press & Hold - PTT: " + this.PressHoldPTT.ToString());
-            sb.AppendLine("Press & Hold - On Hook: " + this.PressHoldOnHook.ToString());
-            sb.AppendLine("Press & Hold - Off Hook: " + this.PressHoldOffHook.ToString());
-            sb.AppendLine("Press & Hold - Fan Up: " + this.PressHoldFanUp.ToString());
-            sb.AppendLine("Press & Hold - Fan Down: " + this.PressHoldFanDown.ToString());
-            sb.AppendLine("Press & Hold - Temp Up: " + this.PressHoldTempUp.ToString());
-            sb.AppendLine("Press & Hold - Temp Down: " + this.PressHoldTempDown.ToString());
+            sb.AppendLine("Press & Hold - Volume Up: " + this.PressHoldValues[0]);
+            sb.AppendLine("Press & Hold - Volume Down: " + this.PressHoldValues[1]);
+            sb.AppendLine("Press & Hold - Seek Up: " + this.PressHoldValues[2]);
+            sb.AppendLine("Press & Hold - Seek Down: " + this.PressHoldValues[3]);
+            sb.AppendLine("Press & Hold - Mode Or Source: " + this.PressHoldValues[4]);
+            sb.AppendLine("Press & Hold - Mute: " + this.PressHoldValues[5]);
+            sb.AppendLine("Press & Hold - Preset Up: " + this.PressHoldValues[6]);
+            sb.AppendLine("Press & Hold - Preset Down: " + this.PressHoldValues[7]);
+            sb.AppendLine("Press & Hold - Power: " + this.PressHoldValues[8]);
+            sb.AppendLine("Press & Hold - Band: " + this.PressHoldValues[9]);
+            sb.AppendLine("Press & Hold - Play Or Enter: " + this.PressHoldValues[10]);
+            sb.AppendLine("Press & Hold - PTT: " + this.PressHoldValues[11]);
+            sb.AppendLine("Press & Hold - On Hook: " + this.PressHoldValues[12]);
+            sb.AppendLine("Press & Hold - Off Hook: " + this.PressHoldValues[13]);
+            sb.AppendLine("Press & Hold - Fan Up: " + this.PressHoldValues[14]);
+            sb.AppendLine("Press & Hold - Fan Down: " + this.PressHoldValues[15]);
+            sb.AppendLine("Press & Hold - Temp Up: " + this.PressHoldValues[16]);
+            sb.AppendLine("Press & Hold - Temp Down: " + this.PressHoldValues[17]);
             sb.AppendLine("Button Remap Active: " + this.ButtonRemapActive.ToString());
-            sb.AppendLine("Volume Up: " + this.VolumeUp.ToString());
-            sb.AppendLine("Volume Down: " + this.VolumeDown.ToString());
-            sb.AppendLine("Seek Up: " + this.SeekUp.ToString());
-            sb.AppendLine("Seek Down: " + this.SeekDown.ToString());
-            sb.AppendLine("Mode Or Source: " + this.ModeSource.ToString());
-            sb.AppendLine("Mute: " + this.Mute.ToString());
-            sb.AppendLine("Preset Up: " + this.PresetUp.ToString());
-            sb.AppendLine("Preset Down: " + this.PresetDown.ToString());
-            sb.AppendLine("Power: " + this.Power.ToString());
-            sb.AppendLine("Band: " + this.Band.ToString());
-            sb.AppendLine("Play Or Enter: " + this.PlayEnter.ToString());
-            sb.AppendLine("PTT: " + this.PTT.ToString());
-            sb.AppendLine("On Hook: " + this.OnHook.ToString());
-            sb.AppendLine("Off Hook: " + this.OffHook.ToString());
-            sb.AppendLine("Fan Up: " + this.FanUp.ToString());
-            sb.AppendLine("Fan Down: " + this.FanDown.ToString());
-            sb.AppendLine("Temp Up: " + this.TempUp.ToString());
-            sb.AppendLine("Temp Down: " + this.TempDown.ToString());
+            sb.AppendLine("Volume Up: " + this.ButtonRemapValues[0]);
+            sb.AppendLine("Volume Down: " + this.ButtonRemapValues[1]);
+            sb.AppendLine("Seek Up: " + this.ButtonRemapValues[2]);
+            sb.AppendLine("Seek Down: " + this.ButtonRemapValues[3]);
+            sb.AppendLine("Mode Or Source: " + this.ButtonRemapValues[4]);
+            sb.AppendLine("Mute: " + this.ButtonRemapValues[5]);
+            sb.AppendLine("Preset Up: " + this.ButtonRemapValues[6]);
+            sb.AppendLine("Preset Down: " + this.ButtonRemapValues[7]);
+            sb.AppendLine("Power: " + this.ButtonRemapValues[8]);
+            sb.AppendLine("Band: " + this.ButtonRemapValues[9]);
+            sb.AppendLine("Play Or Enter: " + this.ButtonRemapValues[10]);
+            sb.AppendLine("PTT: " + this.ButtonRemapValues[11]);
+            sb.AppendLine("On Hook: " + this.ButtonRemapValues[12]);
+            sb.AppendLine("Off Hook: " + this.ButtonRemapValues[13]);
+            sb.AppendLine("Fan Up: " + this.ButtonRemapValues[14]);
+            sb.AppendLine("Fan Down: " + this.ButtonRemapValues[15]);
+            sb.AppendLine("Temp Up: " + this.ButtonRemapValues[16]);
+            sb.AppendLine("Temp Down: " + this.ButtonRemapValues[17]);
 
             return sb.ToString();
-        }*/
+        }
     }
 }

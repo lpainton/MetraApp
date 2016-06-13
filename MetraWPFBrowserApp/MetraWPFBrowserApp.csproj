@@ -61,10 +61,11 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AppUpdateTimer.cs" />
-    <Compile Include="ASCWWindow.xaml.cs">
-      <DependentUpon>ASCWWindow.xaml</DependentUpon>
+    <Compile Include="ASWCWindow.xaml.cs">
+      <DependentUpon>ASWCWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="BoardInfoLogic.cs" />
+    <Compile Include="BoardManager.cs" />
     <Compile Include="ConfigureButtonLogic.cs" />
     <Compile Include="ConnectionForm.cs">
       <SubType>Form</SubType>
@@ -72,6 +73,8 @@
     <Compile Include="ConnectionForm.Designer.cs">
       <DependentUpon>ConnectionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="AboutButtonLogic.cs" />
+    <Compile Include="LogManager.cs" />
     <Compile Include="ProgressBarLogic.cs" />
     <Compile Include="Setup.xaml.cs">
       <DependentUpon>Setup.xaml</DependentUpon>
@@ -86,7 +89,7 @@
     <Compile Include="LoadButtonLogic.cs" />
     <Compile Include="ConnectButtonLogic.cs" />
     <Compile Include="MainLabelLogic.cs" />
-    <Page Include="ASCWWindow.xaml">
+    <Page Include="ASWCWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
