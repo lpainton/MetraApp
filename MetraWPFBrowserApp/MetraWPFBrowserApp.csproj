@@ -152,7 +152,7 @@
     <Resource Include="images\connectdevice.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ConsoleApplication2\AxxessLibrary.csproj">
+    <ProjectReference Include="..\AxxessLibrary\AxxessLibrary.csproj">
       <Project>{4c901ee2-0880-43b5-94fe-1629222a19cf}</Project>
       <Name>AxxessLibrary</Name>
     </ProjectReference>
