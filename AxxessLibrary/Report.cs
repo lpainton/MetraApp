@@ -5,6 +5,10 @@ namespace Metra.Axxess
 	/// <summary>
 	/// Base class for report types. Simply wraps a byte buffer.
 	/// </summary>
+    /// <remarks>
+    /// From: Ashley Deakin's HIDLib
+    /// http://www.developerfusion.com/article/84338/making-usb-c-friendly/
+    /// </remarks>
 	public abstract class Report
 	{
 		#region Member variables

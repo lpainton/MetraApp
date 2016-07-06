@@ -11,7 +11,16 @@ using System.IO.Ports;
 
 namespace Metra.Axxess
 {
-    //Settings: baud=115200 parity=N data=8 stop=1
+    /// <summary>
+    /// Class represents an Axxess board using Microchip CDC virtual serial port technology to communicate.
+    /// </summary>
+    /// <remarks>
+    /// Port Settings: 
+    ///     Baud <- 115200 
+    ///     Parity <- N 
+    ///     Data <- 8 
+    ///     Stop <- 1
+    ///</remarks>
     public class AxxessCDCBoard : CDCDevice, IAxxessBoard
     {
         public bool TestMode { get; set; }
@@ -62,10 +71,9 @@ namespace Metra.Axxess
 
         public BoardType Type { get; protected set; }
 
-        //Settings: baud=115200 parity=N data=8 stop=1
-        public AxxessCDCBoard() : this(false) { }
+        internal AxxessCDCBoard() : this(false) { }
 
-        public AxxessCDCBoard(bool testMode = false)
+        internal AxxessCDCBoard(bool testMode = false)
             : base(115200, Parity.None, 8, StopBits.One, Handshake.None, readTimeOut: 50, writeTimeOut: 500, testMode: testMode)
         {
             this.TestMode = testMode;
@@ -80,9 +88,9 @@ namespace Metra.Axxess
 
             this.PacketSize = 44;
 
-            //Intro? 01 F0 10 03 A0 01 0F 58 04
-            //Ready: 01 F0 20 00 EB 04
+            //Intro: 01 F0 10 03 A0 01 0F 58 04
             this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
+            //Ready: 01 F0 20 00 EB 04
             this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
             this.ASWCRequestPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
 
@@ -129,7 +137,7 @@ namespace Metra.Axxess
         }
         protected virtual void ProcessIntroPacket(byte[] packet)
         {
-            //43, 57, 49 == CWI
+            //43, 57, 49 == CWI in ascii
             if (packet.Length > 9
                 && packet[6] == 0x43
                 && packet[7] == 0x57
@@ -172,21 +180,9 @@ namespace Metra.Axxess
         /// This method is called asynchronously when a packet is received.
         /// It will forward the packet to the appropriate event handler based on identification
         /// </summary>
-        /// <param name="oInRep">The input report containing the packet</param>
+        /// <param name="packet">The raw serialized data packet</param>
         protected override void HandleDataReceived(byte[] packet)
         {
-            /*Util.TestConsoleWrite(this.TestMode, "Handling received packet...");
-            Report.PrintBuffer(packet);
-            if (TestMode)
-            {
-                StringBuilder sb = new StringBuilder();
-                foreach (byte b in packet)
-                {
-                    sb.Append(Convert.ToChar(b));
-                }
-                Util.TestConsoleWrite(TestMode, sb.ToString());
-            }*/
-
             if (OnPacket != null)
                 OnPacketReceieved(new PacketEventArgs(packet));
             if (OnIntro != null)
@@ -222,6 +218,10 @@ namespace Metra.Axxess
         public virtual void OnPacketReceieved(PacketEventArgs e) { OnPacket(this, e); }
         #endregion 
 
+        /// <summary>
+        /// Explicit implementations of the IAxxessBoard interface.  
+        /// Note that ASWC is not available on CDC boards.
+        /// </summary>
         #region Explicit IAxxessDevice Implementation
         string IAxxessBoard.ProductID { get { return this.ProductID; } }
         string IAxxessBoard.AppFirmwareVersion { get { return this.AppFirmwareVersion; } }

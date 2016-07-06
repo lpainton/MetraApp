@@ -5,8 +5,12 @@ using System.Runtime.InteropServices;
 namespace Metra.Axxess
 {
 	/// <summary>
-	/// Class that wraps USB API calls and structures
+	/// Class that wraps USB API calls and structures.
 	/// </summary>
+    /// <remarks>
+    /// From: Ashley Deakin's HIDLib
+    /// http://www.developerfusion.com/article/84338/making-usb-c-friendly/
+    /// </remarks>
     public class Win32Usb
     {
         #region Structures

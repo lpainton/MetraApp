@@ -7,26 +7,60 @@ using System.Threading;
 
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// Contains logic for updating the firmware on each board type.
+    /// </summary>
     class OperationFirmware : Operation
     {
+        /// <summary>
+        /// The firmware file object being used to update the board.
+        /// </summary>
         AxxessFirmware File { get; set; }
+
+        /// <summary>
+        /// A reference to the firmware file's enumerator object.
+        /// </summary>
         IEnumerator<byte[]> _fileEnum;
 
-        bool AckRx { get; set; }
-        bool FinalRx { get; set; }
+        /// <summary>
+        /// Flag set to true if ack received.
+        /// </summary>
+        //bool AckRx { get; set; }
 
-        public OperationFirmware(IAxxessBoard device, AxxessFirmware file) : base(device, OperationType.Firmware)
+        /// <summary>
+        /// Flag set to true if final packet received.
+        /// </summary>
+        //bool FinalRx { get; set; }
+
+        /// <summary>
+        /// Semaphore used while waiting on device for ack
+        /// </summary>
+        EventWaitHandle WaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+
+        internal OperationFirmware(IAxxessBoard device, AxxessFirmware file) : base(device, OperationType.Firmware)
         {
             this.File = file;
             this._fileEnum = this.File.GetEnumerator();
             this.TotalOperations = this.File.Count;
         }
 
+        public override void Stop()
+        {
+            base.Stop();
+            WaitHandle.Set();
+        }
+
+        /// <summary>
+        /// Overriden version of the worker method runs Work only once.
+        /// </summary>
         public override void DoWork()
         {
             this.Work();
         }
 
+        /// <summary>
+        /// Work here is a helper method, branching off to a case based on the board type.
+        /// </summary>
         public override void Work()
         {
             base.Work();
@@ -54,7 +88,7 @@ namespace Metra.Axxess
         }
 
         /// <summary>
-        /// Procedural
+        /// Procedural update method which directly controls the update process for CDC boards.
         /// </summary>
         private void WorkForCDC()
         {
@@ -62,17 +96,10 @@ namespace Metra.Axxess
             _timeoutCounter = 0;
             CanTimeOut = true;
 
-            //Register events
-            //this.Device.AddAckEvent(AckHandler);
-            //this.Device.AddFinalEvent(FinalHandler);
-
             AxxessCDCBoard board = (AxxessCDCBoard)Device;
 
-            //Turns off the board's built in async read so that we can 
+            //Turns off the board's built in async read so that we can control the read directly.
             board.StopRead = true;
-            //board.Port.DiscardInBuffer();
-            //board.Port.DiscardOutBuffer();
-            //board.Port.Open();
             Thread.Sleep(100);
             
             //Wait for ACK byte
@@ -82,7 +109,6 @@ namespace Metra.Axxess
             board.SendReadyPacket();
             while (!IsTimedOut)
             {
-                //Thread.Sleep(100);
                 try
                 {
                     int bytes = board.Port.BytesToRead;
@@ -92,15 +118,14 @@ namespace Metra.Axxess
                         board.Port.Read(buffer, 0, bytes);
                         foreach (byte b in buffer)
                         {
-                            Console.Write("{0:x2} ", b);
+                            //Here we are looking for an ack byte in the data stream.
                             if (b == 0x41)
                             {
-                                //Console.WriteLine("Ack!");
+                                //Goto here breaks out of nested loop.
                                 goto filetrans;
                             }
 
                         }
-                        Console.WriteLine();
                     }
                 }
                 catch (TimeoutException)
@@ -124,7 +149,7 @@ namespace Metra.Axxess
                 bool ackRX = false;
                 board.Write(_fileEnum.Current);
                 OperationsCompleted++;
-                //Thread.Sleep(100);
+   
                 Timeout = 10;
                 _timeoutCounter = 0;
 
@@ -139,21 +164,20 @@ namespace Metra.Axxess
                             board.Port.Read(buffer, 0, bytes);
                             foreach (byte b in buffer)
                             {
-                                Console.Write("{0} ", b);
+                                //Waiting for ack or final
                                 if (b == 0x41)
                                 {
-                                    //Console.WriteLine("Ack!");
                                     ackRX = true;
                                     break;
                                 }
                                 else if (b == 0x38)
                                 {
-                                    //Console.WriteLine("Final!");
+                                    //Used a goto here because the nested loops make breaking difficult
+                                    //C# lacks a labelled break to address this problem.
                                     goto endtrans;
                                 }
 
                             }
-                            Console.WriteLine();
                         }
                     }
                     catch (TimeoutException)
@@ -175,6 +199,17 @@ namespace Metra.Axxess
         }
 
 
+        //Semaphore events used in HID-3
+        public void AckRxHandler(object sender, EventArgs e) { WaitHandle.Set(); }
+        public void FinalRxHandler(object sender, EventArgs e) { WaitHandle.Set(); }
+        /*public void ResetFlags()
+        {
+            this.AckRx = false;
+            this.FinalRx = false;
+        }*/
+        /// <summary>
+        /// Also known as the HID 293 board.  This board has some peculiarities that set it apart from normal HID updates.
+        /// </summary>
         private void WorkForHID3()
         {
             //Register events
@@ -187,21 +222,24 @@ namespace Metra.Axxess
             //Wait for Rx
             while (this.File.Index < (this.File.Count - 2) && this.Status.Equals(OperationStatus.Working))
             {
-                while (!this.AckRx && this.Status.Equals(OperationStatus.Working))
+                //Spin lock is the result of some messy planning.
+                /*while (!this.AckRx && this.Status.Equals(OperationStatus.Working))
                 {
-                    //Thread.Sleep(10);
-                }
+
+                }*/
+                WaitHandle.WaitOne();
                 
                 _fileEnum.MoveNext();
-                this.ResetFlags();
+                //this.ResetFlags();
                 this.Device.SendPacket(_fileEnum.Current);
                 this.OperationsCompleted++;
             }
 
-            while (!this.AckRx && this.Status.Equals(OperationStatus.Working))
+            //Another spin lock.  TODO: Eliminate this lock and its ugly cousin
+            /*while (!this.AckRx && this.Status.Equals(OperationStatus.Working))
             {
-                //Thread.Sleep(10);
-            }
+            }*/
+            WaitHandle.WaitOne();
 
             if (this.Status.Equals(OperationStatus.Working))
             {
@@ -223,6 +261,36 @@ namespace Metra.Axxess
             this.Dispose();
         }
 
+        //Events for HID updating.
+        public void AckHandler(object sender, EventArgs e)
+        {
+            if (this.Status.Equals(OperationStatus.Working) && this._fileEnum.MoveNext())
+            {
+                this.Device.SendPacket(_fileEnum.Current);
+                this.OperationsCompleted++;
+            }
+        }
+        public void FinalHandler(object sender, EventArgs e)
+        {
+            this.OperationsCompleted++;
+            this.Status = OperationStatus.Finished;
+            this.Dispose();
+        }
+        /// <summary>
+        /// The normal HID firmware update is purely event driven.
+        /// Thus the board itself controls the flow of the firmware update.
+        /// </summary>
+        /// <remarks>
+        /// I haven't been thrilled with the speed of updates using this method.
+        /// Turns out the firing thread on these events is the asynch read thread, which
+        /// winds up slowing things down because it winds up waiting for the packet to send
+        /// before terminating.
+        /// 
+        /// This is probably best resolved by switching to a producer/consumer model on device
+        /// communications management.  Basically set a consumer thread on a semaphore and signal
+        /// it when the device receives a valid packet.  Have it consume all incoming packets
+        /// from a queue and call events accordingly.
+        /// </remarks>
         private void WorkForHID()
         {
             //Register events
@@ -233,19 +301,19 @@ namespace Metra.Axxess
             this.Device.SendReadyPacket();
         }
 
+        /// <summary>
+        /// Procedural method for FTDI update process.
+        /// </summary>
         private void WorkForFTDI()
         {
             Timeout = 10;
             _timeoutCounter = 0;
             CanTimeOut = true;
 
-            //Register events
-            //this.Device.AddAckEvent(AckHandler);
-            //this.Device.AddFinalEvent(FinalHandler);
-
             AxxessFTDIBoard board = (AxxessFTDIBoard)Device;
             
             //Turns off the board's built in async read so that we can 
+            //manually control read operations
             board.StopRead = true;
 
 
@@ -332,15 +400,9 @@ namespace Metra.Axxess
             }
         }
 
-        public void AckHandler(object sender, EventArgs e)
-        {
-            if (this.Status.Equals(OperationStatus.Working) && this._fileEnum.MoveNext())
-            {
-                this.Device.SendPacket(_fileEnum.Current);
-                this.OperationsCompleted++;
-            }
-        }
-
+        /// <summary>
+        /// Not being used.
+        /// </summary>
         public void CDCAckHandler(object sender, EventArgs e)
         {
             if (this.Status.Equals(OperationStatus.Working))
@@ -355,13 +417,6 @@ namespace Metra.Axxess
                     this.FinalHandler(sender, e);
                 }
             }
-        }
-
-        public void FinalHandler(object sender, EventArgs e)
-        {
-            this.OperationsCompleted++;
-            this.Status = OperationStatus.Finished;
-            this.Dispose();
         }
 
         public override void Dispose()
@@ -382,23 +437,6 @@ namespace Metra.Axxess
             }
 
             OnCompleted();
-        }
-
-        //Flag events
-        public void AckRxHandler(object sender, EventArgs e)
-        {
-            this.AckRx = true;
-        }
-
-        public void FinalRxHandler(object sender, EventArgs e)
-        {
-            this.FinalRx = true;
-        }
-
-        public void ResetFlags()
-        {
-            this.AckRx = false;
-            this.FinalRx = false;
         }
     }
 }

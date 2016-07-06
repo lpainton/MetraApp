@@ -5,14 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-/*
- * TODO
- * 
- * Change the operation timeout to terminate the thread and report it in the status somehow.
- */
-
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// An enum of valid op statuses.
+    /// </summary>
     public enum OperationStatus
     {
         Ready,
@@ -20,14 +17,18 @@ namespace Metra.Axxess
         Finished
     };
 
+    /// <summary>
+    /// An enum of valid op types.
+    /// </summary>
     public enum OperationType
     {
-        Download,
         Boot,
         Firmware,
-        Remap
     };
 
+    /// <summary>
+    /// A container object for information needed in the creation of Operations.
+    /// </summary>
     public class OpArgs
     {
         public IAxxessBoard Device { get; private set; }
@@ -42,6 +43,9 @@ namespace Metra.Axxess
         }
     }
 
+    /// <summary>
+    /// Inherit this for op complete handling.
+    /// </summary>
     public class OperationEventArgs : EventArgs
     {
         public OperationEventArgs() : base()
@@ -50,8 +54,15 @@ namespace Metra.Axxess
         }
     }
 
+    /// <summary>
+    /// An event handler for completed operations.
+    /// </summary>
     public delegate void OperationCompletedHandler(object sender, OperationEventArgs args);
 
+    /// <summary>
+    /// Provides an underlying abstract implementation for IOperation.
+    /// See <see cref="IOperation">IOperation</see> for further details.    
+    /// </summary>
     abstract class Operation : IOperation
     {
         public event OperationCompletedHandler Completed;
@@ -63,7 +74,7 @@ namespace Metra.Axxess
         public int TotalOperations { get; protected set; }
         public int Progress { get { return (OperationsCompleted * 100) / TotalOperations; } }
 
-        //Timeout related properties and methods
+        //Timeout related properties and methods.  Provides timeout tracking features.
         public int Timeout { get; protected set; }
         protected int _timeoutCounter;
         protected int TimeoutCounter { get { return _timeoutCounter; } }
@@ -78,7 +89,7 @@ namespace Metra.Axxess
         public IAxxessBoard Device { get; private set; }
         public Exception Error { get; protected set; }
 
-        public Operation(IAxxessBoard device, OperationType type)
+        internal Operation(IAxxessBoard device, OperationType type)
         {
             this.Type = type;
 
@@ -99,6 +110,10 @@ namespace Metra.Axxess
             this.Error = null;
         }
 
+        /// <summary>
+        /// Loops on work for the purposes of providing a continuously executing worker thread.
+        /// To prevent looping, set Status away from Working.
+        /// </summary>
         public virtual void DoWork()
         {
             while(this.Status.Equals(OperationStatus.Working))
@@ -107,6 +122,9 @@ namespace Metra.Axxess
             }
         }
 
+        /// <summary>
+        /// Method contains the actual work portion of the worker thread.
+        /// </summary>
         public virtual void Work()
         {
             if (Timeout > 0)
@@ -121,12 +139,18 @@ namespace Metra.Axxess
             return;
         }
 
+        /// <summary>
+        /// Starts the worker thread and sets the status to Working.
+        /// </summary>
         public virtual void Start()
         {
             this.Status = OperationStatus.Working;
             this.WorkerThread.Start();
         }
 
+        /// <summary>
+        /// Stops the worker thread and sets status to finish, then calls dispose.
+        /// </summary>
         public virtual void Stop()
         {
             this.Status = OperationStatus.Finished;
@@ -134,11 +158,17 @@ namespace Metra.Axxess
             this.Dispose();
         }
 
+        /// <summary>
+        /// Override this method to handle any resources that need to be disposed of.
+        /// </summary>
         public virtual void Dispose()
         {
             return;
         }
 
+        /// <summary>
+        /// Method calls any OnCompleted handlers added.
+        /// </summary>
         public virtual void OnCompleted()
         {
             if (Completed != null)

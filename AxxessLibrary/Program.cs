@@ -9,6 +9,10 @@ using Newtonsoft.Json;
 
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// The main class here provides a series of test methods for debugging and diagnostics.
+    /// Running the executable opens a CLI menu which allows the user to run different tests and diagnostics.
+    /// </summary>
     class Program
     {
         public static void Main()
@@ -58,12 +62,9 @@ namespace Metra.Axxess
             }
         }
 
-        class TestToken
-        {
-            public string ua { get; set; }
-            public string url { get; set; }
-        }
-
+        /// <summary>
+        /// Tests connectivity to Axxess mobile app firmware information server.
+        /// </summary>
         private static void FirmwareJSONTest()
         {
             string url = "http://axxessupdater.com/admin/secure/data-request.php?id=CWI257291&v=327&d=iPhone";
@@ -72,11 +73,15 @@ namespace Metra.Axxess
             string res = www.DownloadString(url);
             Console.WriteLine(res);
 
-            TestToken tok = (TestToken)JsonConvert.DeserializeObject<TestToken>(res);
+            var def = new {url=String.Empty, ua=String.Empty};
+            var tok = JsonConvert.DeserializeAnonymousType(res, def);
             Console.WriteLine(tok.ua);
             Console.WriteLine(tok.url);
         }
 
+        /// <summary>
+        /// Test to check the functionality of the ASWC SectionChanged flags.
+        /// </summary>
         private static void ASWCByte3Test()
         {   
             Console.WriteLine("------------------------------");
@@ -86,25 +91,29 @@ namespace Metra.Axxess
             List<SectionChanged> sections = new List<SectionChanged>(
                 new SectionChanged[] { SectionChanged.Car, SectionChanged.SpeedControl });
             byte eval = (int)SectionChanged.Car | (int)SectionChanged.SpeedControl;
-            byte[] packet = test.GetRawPacket(sections);
+            byte[] packet = test.Serialize(sections);
             Debug.Assert(packet[3] == eval);
             Console.WriteLine("Test #1: Expected {0} and got {1}.", eval, packet[3]);
 
             sections.Add(SectionChanged.PressHold);
             eval = (byte)(eval | (int)SectionChanged.PressHold);
-            packet = test.GetRawPacket(sections);
+            packet = test.Serialize(sections);
             Debug.Assert(packet[3] == eval);
             Console.WriteLine("Test #2: Expected {0} and got {1}.", eval, packet[3]);
 
             sections.Remove(SectionChanged.Car);
             eval = eval = (byte)(eval ^ (int)SectionChanged.Car);
-            packet = test.GetRawPacket(sections);
+            packet = test.Serialize(sections);
             Debug.Assert(packet[3] == eval);
             Console.WriteLine("Test #3: Expected {0} and got {1}.", eval, packet[3]);
 
             Console.WriteLine("------------------------------");
         }
 
+        /// <summary>
+        /// Tests ASWC functionality by sending an information request packet to a connected board.
+        /// If successful will return with a serialized ASWC info object.
+        /// </summary>
         private static void ASWCRequestTest()
         {
             IAxxessBoard dev = GetBoard();
@@ -129,6 +138,10 @@ namespace Metra.Axxess
             Console.WriteLine(info.ToString());
         }
 
+        /// <summary>
+        /// Helper method loops until a device is connected, then returns that device.
+        /// </summary>
+        /// <returns></returns>
         private static IAxxessBoard GetBoard()
         {
             Console.WriteLine("------------------------------");
@@ -136,12 +149,15 @@ namespace Metra.Axxess
             IAxxessBoard dev = null;
             while (dev == null)
             {
-                dev = AxxessConnector.InitiateConnection();
+                dev = AxxessConnector.ResolveConnection();
                 Thread.Sleep(10);
             }
             return dev;
         }
 
+        /// <summary>
+        /// Simple test verifies board type detection.
+        /// </summary>
         private static void TypeTest()
         {
             IAxxessBoard dev = GetBoard();
@@ -149,18 +165,30 @@ namespace Metra.Axxess
             Console.WriteLine("------------------------------");
         }
 
+        /// <summary>
+        /// Tests that the connected board is acknowledging introductory packets.
+        /// </summary>
+        /// <remarks>
+        /// This test can fail for many reasons.
+        /// </remarks>
         private static void IntroTest()
         {
+            //Connect to board
             IAxxessBoard dev = GetBoard();
+
+            //Instantiate the reply packet
             byte[] packet = null;
+
+            //Enclose a reference to the reply packet in an event handler
             IntroEventHandler d = delegate(object s, PacketEventArgs a)
             {
                 packet = a.Packet;
             };
 
-
+            //Add event to device
             dev.AddIntroEvent(d);
 
+            //Send intro packet in loop
             Console.WriteLine("Beginning Intro Packet Test...");
             int counter = 0;
             while(packet == null)

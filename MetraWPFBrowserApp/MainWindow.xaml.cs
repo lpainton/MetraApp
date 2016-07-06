@@ -21,19 +21,23 @@ namespace MetraWPFBrowserApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Most of the application logic is handled by the MetraApp class object below.
+        /// </summary>
         MetraApp App { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
 
-            App = new MetraApp(this);
+            App = MetraApp.GetInstance(this);
             App.Initialize();
 
             _mainLblDown = false;
         }
 
         //Main label click logic
+        //Currently clicking the main label does nothing.
         bool _mainLblDown;
         private void MainLabel_MouseDown(object sender, MouseButtonEventArgs e) { _mainLblDown = true; }
         private void MainLabel_MouseLeave(object sender, MouseEventArgs e) { _mainLblDown = false; }

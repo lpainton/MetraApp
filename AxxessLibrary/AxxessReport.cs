@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
+    // All off the classes below inherit from generic representation of the reporting system
+    // used with all HID devices.  These are mostly used in the background and are rarely interacted with.
+
     public class IntroReport : OutputReport
     {
         public IntroReport(IAxxessBoard dev) : base((HIDDevice)dev)
@@ -27,7 +30,6 @@ namespace Metra.Axxess
         public ASWCRequestReport(IAxxessBoard dev) : base((HIDDevice)dev)
         {
             this.SetBuffer(dev.ASWCRequestPacket);
-            //Console.WriteLine(this.BufferLength);
         }
     }
 

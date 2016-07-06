@@ -10,6 +10,13 @@ using System.Windows.Forms;
 
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// Class represents an Axxess HID-2 style board.
+    /// </summary>
+    /// <remarks>
+    /// Note that this type of board is ideal for library example purposes, 
+    /// since most other types were based on its protocols.
+    /// </remarks>
     public class AxxessHIDBoard : HIDDevice, IAxxessBoard
     {
         //Board attributes
@@ -44,15 +51,19 @@ namespace Metra.Axxess
         {
             get
             {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendFormat("Product ID: {0}, App Ver: {1}, Boot Ver: {2}", this.ProductID, this.AppFirmwareVersion, this.BootFirmwareVersion);
-                return sb.ToString();
+                return String.Format("Product ID: {0}, App Ver: {1}, Boot Ver: {2}", this.ProductID, this.AppFirmwareVersion, this.BootFirmwareVersion);
             }
         }
 
+        /// <summary>
+        /// Stores ASWC information attached to this board.
+        /// </summary>
         public ASWCInfo ASWCInformation { get; set; }
-        private BoardStatus Status { get; set; }        
 
+        /// <summary>
+        /// The current status of the board (idle or standby).  Only used for updating firmware.
+        /// </summary>
+        private BoardStatus Status { get; set; }        
 
         public byte[] IntroPacket { get; protected set; }
         public byte[] ReadyPacket { get; protected set; }
@@ -69,15 +80,24 @@ namespace Metra.Axxess
             this.ASWCInformation = null;
             this.Status = BoardStatus.Idle;
 
+            //This packet size is the transmission width for significant bytes in this board type.
+            //Ultimately all packets sent over USB HID are 65 bytes in size.  Essentially everything
+            //outside of these 44 bytes is overhead.
             this.PacketSize = 44;
+
+            //These packets are hard coded since the protocols are.  Ideally an updated version of this library
+            //would allow the definition of protocols using external JSON or XML configuration files.
             this.IntroPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 });
             this.ReadyPacket = this.PrepPacket(new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 });
-            //0x55, 0xB0, 0x09, 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04
             this.ASWCRequestPacket = this.PrepASWCRequestPacket(new byte[] { 0x55, 0xB0, 0x09, 0x01, 0xF0, 0xA0, 0x03, 0x10, 0x01, 0x00, 0x57, 0x04 });
 
             this.Initialize();
         }
 
+        /// <summary>
+        /// Modularizes some of the initialization steps since they're specific to HID-2 types.
+        /// Inheriting boards override some of these.
+        /// </summary>
         protected virtual void Initialize()
         {
             this.Type = BoardType.HIDNoChecksum;
@@ -85,6 +105,15 @@ namespace Metra.Axxess
             Log.Write("Initialized HID-2 board.", LogMode.Verbose);
         }
 
+        /// <summary>
+        /// Prepares a packet requesting ASWC information from the board for transmission.
+        /// </summary>
+        /// <param name="packet">The raw packet to prepare.</param>
+        /// <returns>The prepped packet.</returns>
+        /// <remarks>
+        /// Microsoft's HID protocols require the addition of a leading zero byte to any transmission.
+        /// So where the normal HID tramission window is 64 bytes, Microsoft's is 65.
+        /// </remarks>
         protected virtual byte[] PrepASWCRequestPacket(byte[] packet)
         {
             //byte[] newPacket = new byte[59];
@@ -100,7 +129,8 @@ namespace Metra.Axxess
 
 
 
-        //Atomic packet operations
+        //--- Atomic packet operations ---
+        //These discrete packet operations allow direct control over communication procotols with the board.
         public void SendIntroPacket()
         {
             this.Write(new IntroReport(this));
@@ -109,12 +139,22 @@ namespace Metra.Axxess
         {
             this.Write(new ReadyReport(this));
         }
+        /// <summary>
+        /// Sends an ASWC info request packet to the connected device.
+        /// </summary>
+        /// <remarks>
+        /// The ASWC protocols being notably different from the normal HID-2 protocols
+        /// require sending the packets without normal HID-2 protocol preparation.
+        /// Hence the use of a RawOutputReport, which transmits the packet 'as is'.
+        /// </remarks>
         public virtual void SendASWCRequestPacket()
         {
             Log.Write("Sending ASWC Info request packet.");
             this.Write(new RawOutputReport(this, this.ASWCRequestPacket));
         }
-
+        /// <summary>
+        /// Preps a packet for transmission.  Exactly the same as <see cref="PrepASWCRequestPacket(byte[])">PrepASWCRequestPacket</see>.
+        /// </summary>
         public virtual byte[] PrepPacket(byte[] packet) 
         {
             byte[] newPacket = new byte[65];
@@ -131,7 +171,11 @@ namespace Metra.Axxess
         /// Method to extract board versioning info from intro response packets
         /// </summary>
         /// <param name="packet">The received packet</param>
-        /// <returns>True of intro packet, else false</returns>
+        /// <returns>True if intro packet, else false</returns>
+        /// <remarks>
+        /// Note that if the board has corrupted firmware it may return a corrupt intro packet that
+        /// registers as an intro packet but has an unparsable PID or Firmware Ver.
+        /// </remarks>
         protected virtual void ParseIntroPacket(object sender, PacketEventArgs args)
         {
             byte[] packet = args.Packet;
@@ -143,6 +187,9 @@ namespace Metra.Axxess
                 content += Convert.ToChar(b);
             }
 
+            //Intro packets contain ASCII encoded bytes which include
+            //CWI followed by a PID and firmware version.  Only if all these bytes are in place
+            //is the intro packet valid.
             if (content.Substring(7, 3).Equals("CWI"))
             {
                 this.ProductID = content.Substring(7, 9);
@@ -158,7 +205,8 @@ namespace Metra.Axxess
                 packet[3] == 0x10 && packet[4] == 0x16 &&
                 packet[5] == 0x1A);
         }        
-        //Event related stuff
+
+        //Event related condition checks
         public virtual bool IsAck(byte[] packet) 
         {
             return ((packet[1] == 0x41)
@@ -174,9 +222,6 @@ namespace Metra.Axxess
             return packet[4] == 0x01
                 && packet[5] == 0x0F
                 && packet[6] == 0xA0;
-            /*return packet[1] == 0x01
-                && packet[2] == 0x0F
-                && packet[3] == 0xA0;*/
         }
         public virtual bool IsASWCConfirm(byte[] packet)
         {
@@ -188,7 +233,8 @@ namespace Metra.Axxess
 
         /// <summary>
         /// This method is called asynchronously when a packet is received.
-        /// It will forward the packet to the appropriate event handler based on identification
+        /// It will forward the packet chain of responsibility style
+        /// to the appropriate event handler based on identification.
         /// </summary>
         /// <param name="oInRep">The input report containing the packet</param>
         protected override void HandleDataReceived(InputReport InRep)
@@ -196,14 +242,7 @@ namespace Metra.Axxess
             base.HandleDataReceived(InRep);
 
             byte[] packet = InRep.Buffer;
-            /*Console.Write("Incoming Report: ");
-            Report.PrintReport(InRep);
 
-            if (this.ProductID.Equals(String.Empty))
-            {
-                if (this.ProcessIntroPacket(packet))
-                    this.OnIntroReceived(new PacketEventArgs(packet));
-            }*/ 
             if (this.OnPacket != null) this.OnPacketReceived(new PacketEventArgs(packet));
             if (this.OnIntro != null) this.OnIntroReceived(new PacketEventArgs(packet));
             if (this.OnAck != null && this.IsAck(packet))
@@ -238,14 +277,30 @@ namespace Metra.Axxess
             this.RegisterASWCData(packet);
         }
 
+        /// <summary>
+        /// Swaps out any existing ASWCInformation object held by this one with a new
+        /// version from serial data.
+        /// </summary>
+        /// <param name="raw">The raw serial data</param>
         public virtual void RegisterASWCData(byte[] raw)
         {
             this.ASWCInformation = new ASWCInfo(raw);
         }
 
+        /// <summary>
+        /// Serializes an ASWCInfo object and then transmits it to the connected board.
+        /// Builds a list of changed sections from the provided list.
+        /// </summary>
+        /// <param name="info">The info object</param>
+        /// <param name="list"></param>
+        /// <remarks>
+        /// Notably the ASWC system requires a checksum, whereas technically this is listed as a 
+        /// no-checksum board.  This is because the ASWC system was added after the board's creation
+        /// and is standardized across all board types.        
+        /// </remarks>
         public virtual void SendASWCMappingRequest(ASWCInfo info, IList<SectionChanged> list)
         {
-            List<byte> packet = new List<byte>(info.GetRawPacket(list));
+            List<byte> packet = new List<byte>(info.Serialize(list));
             packet.InsertRange(0, new byte[4] { 0x00, 0x55, 0xB0, 0x3B });
             packet.Add(0x04);
             byte csum = CalculateChecksum(packet.ToArray());
@@ -258,6 +313,11 @@ namespace Metra.Axxess
             return new AxxessInputReport(this);
         }
 
+        /// <summary>
+        /// Calculates 
+        /// </summary>
+        /// <param name="packet"></param>
+        /// <returns></returns>
         public virtual byte CalculateChecksum(byte[] packet)
         {
             byte checksum = new byte();
@@ -267,11 +327,29 @@ namespace Metra.Axxess
         }
         
         #region Events
+        /// <summary>
+        /// Fired on receiving intro reply packets from the device.
+        /// </summary>
         public event IntroEventHandler OnIntro;
+        /// <summary>
+        /// Fired on receiving a firmware ack packet from the device.
+        /// </summary>
         public event AckEventHandler OnAck;
+        /// <summary>
+        /// Fired on receiving a firmware finalization packet from the device.
+        /// </summary>
         public event FinalEventHandler OnFinal;
+        /// <summary>
+        /// Fired on receiving an ASWCInfo packet from the device.
+        /// </summary>
         public event ASWCInfoHandler OnASWCInfo;
+        /// <summary>
+        /// Fired on receiving an ASWC mapping confirmation from the device.
+        /// </summary>
         public event ASWCConfirmHandler OnASWCConfirm;
+        /// <summary>
+        /// Fired on receiving any packet from the device.
+        /// </summary>
         public event PacketHandler OnPacket;
 
         public virtual void OnIntroReceived(PacketEventArgs e) { OnIntro(this, e); }

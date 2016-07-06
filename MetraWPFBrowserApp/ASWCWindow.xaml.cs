@@ -23,8 +23,15 @@ namespace MetraWPFBrowserApp
     /// </summary>
     public partial class ASWCWindow : Window
     {
+        /// <summary>
+        /// The device attached to the current window.
+        /// </summary>
         IAxxessBoard AttachedDevice { get; set; }
+        
         ASWCInfo _workingSet;
+        /// <summary>
+        /// The ASWCInfo object currently being viewed and modified.
+        /// </summary>
         public ASWCInfo WorkingSet 
         { 
             get
@@ -39,7 +46,14 @@ namespace MetraWPFBrowserApp
                 }
             }
         }
+        /// <summary>
+        /// A list of sections which were modified.
+        /// </summary>
         List<SectionChanged> _changedSections;
+        /// <summary>
+        /// Marks an invidiual section as having been modified.
+        /// </summary>
+        /// <param name="section">The section in question</param>
         public void MarkSectionChanged(SectionChanged section)
         {
             if (!_changedSections.Contains(section))
@@ -53,6 +67,9 @@ namespace MetraWPFBrowserApp
             _changedSections.Clear();
         }
 
+        /// <summary>
+        /// Delegate to change the context of the form.
+        /// </summary>
         delegate void ContextDelegate();
 
         public ASWCWindow(IAxxessBoard device)
@@ -69,7 +86,7 @@ namespace MetraWPFBrowserApp
 
         private void OnRendered(object sender, EventArgs e)
         {
-
+            //Nothing to see here.
         }
 
         private void Save_Button_Click(object sender, RoutedEventArgs e)

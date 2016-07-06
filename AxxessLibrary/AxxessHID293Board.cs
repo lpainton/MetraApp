@@ -9,8 +9,12 @@ using System.Windows.Forms;
 namespace Metra.Axxess
 {
    /// <summary>
-    /// Class based implementation of the HID w/ Checksum board
+    /// Class represents the Axxess HID w/ Checksum board.
     /// </summary>
+    /// <remarks>
+    /// The HID 293 (HID-3) board is different from other HIDs in both its protocols
+    /// and in its requirement for a DC-12 volt power source.
+    /// </remarks>
     public class AxxessHID293Board : AxxessHIDBoard
     {
         public AxxessHID293Board() : base() { }
@@ -27,14 +31,12 @@ namespace Metra.Axxess
             this.OnIntro += ParseIntroPacket;
         }
 
-        //01 0F 20 00 CC 04
+        /// This is notably different from other boards in that any response data 
+        /// is considered acknowledgement of packet receipt.
         public override bool IsAck(byte[] packet) 
         {
-            /*if (packet[1] == 0x01 && packet[2] == 0x0F && packet[3] == 0x20 && 
-                packet[4] == 0x00 && packet[5] == 0xCC && packet[6] == 0x04)*/
             if (packet.Length > 0)
             {
-                //Console.WriteLine("Ack!");
                 return true;
             }
             return false;
@@ -46,36 +48,22 @@ namespace Metra.Axxess
             return false;
         }
 
+        //Not necessary
         protected override void HandleDataReceived(InputReport InRep)
         {
-            /*byte[] packet = InRep.Buffer;
-            foreach (byte b in packet)
-                Console.Write("{0} ", b);
-            Console.WriteLine();*/
-
-            /*if (this.ProductID.Equals(String.Empty))
-            {
-                if (this.ProcessIntroPacket(packet))
-                    this.OnIntroReceived(new PacketEventArgs(packet));
-            }*/
             base.HandleDataReceived(InRep);
         }
 
-        /*protected override bool ProcessIntroPacket(byte[] packet)
-        {
-            return (this.ParseIntroPacket(packet));
-        }*/
         protected override void ParseIntroPacket(object sender, PacketEventArgs args)
         {
             byte[] packet = args.Packet;
+
             //Parse packet into characters
             String content = String.Empty;
             foreach (byte b in packet)
             {
                 content += Convert.ToChar(b);
             }
-
-            //Console.WriteLine(packet);
 
             if (content.Substring(7, 3).Equals("CWI"))
             {
@@ -86,10 +74,11 @@ namespace Metra.Axxess
         }
 
         /// <summary>
-        /// Takes a packet and prepares it for transmission to the board.  Adds leading bytes, padding and optional checksum.
+        /// Takes a packet and prepares it for transmission to the board.  Adds leading bytes and padding as needed.
         /// </summary>
         /// <param name="packet">The packet to prepare for sending.</param>
-        /// <returns></returns>
+        /// <param name="encapsulate">Optional param.  Only set to true if you intend to add a checksum on the end.</param>
+        /// <returns>The prepared packet</returns>
         public byte[] PrepPacketWithoutCheck(byte[] packet, bool encapsulate = false)
         {
             byte[] newPacket = new byte[65];
@@ -105,6 +94,11 @@ namespace Metra.Axxess
 
             return newPacket;
         }
+        /// <summary>
+        /// Prepares the packet with encapsulation and a checksum.
+        /// </summary>
+        /// <param name="packet">The raw packet to prepare</param>
+        /// <returns>The prepared packet with encapsulation and checksum.</returns>
         public override byte[] PrepPacket(byte[] packet)
         {
             byte[] newPacket = PrepPacketWithoutCheck(packet, true);
@@ -113,28 +107,26 @@ namespace Metra.Axxess
             newPacket[1] = 0x01;
             byte by = this.CalculateChecksum(newPacket);
             newPacket[64] = (byte)(by & 0xFF);
-            //Console.WriteLine("Post checksum: {0}", newPacket[64]);
-
-            /*Console.Write("Sending: ");
-            foreach (byte b in newPacket)
-                Console.Write("{0} ", b);
-            Console.WriteLine();*/
 
             return newPacket;
         }
 
+        /// <summary>
+        /// Calculates a checksum appropriate for this board type.
+        /// Does this by summing all bytes except the leading byte since it is a windows artifact.
+        /// </summary>
+        /// <param name="packet">The packet of bytes being considered.</param>
+        /// <returns>The checksum as a byte</returns>
         public override byte CalculateChecksum(byte[] packet)
         {
-            //Sum up all bytes except the lead
             int checksum = 0;
 
+            //Loop sums up all bytes except the lead
             for (int i = 2; i < packet.Length-1; i++)
             {
-                //checksum = Util.AddBytes(checksum, packet[i]);
                 checksum += packet[i];
             }
 
-            //Console.WriteLine("Raw checksum: {0}", checksum);
             return (byte)checksum;
         } 
         

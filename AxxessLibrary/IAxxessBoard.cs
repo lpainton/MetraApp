@@ -6,18 +6,17 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// Basically just an exception of a special sub type.
+    /// </summary>
     public class AxxessDeviceException : Exception
     {
     }
     
     /// <summary>
     /// An enum representing the current status of the board as it regards updates and remapping.
-    /// NoOp: Board is in a non-ready state
-    /// Hailed: Initial intro packet has been sent
-    /// Idling: Board is in pre-ready state but otherwise non-active
-    /// Standby: Update cycle begun and awaiting board response
-    /// Ready: Board is in ready-state and prepared to receive data packets
-    /// Finalizing: Board has completed a data operation and is exiting ready-state.
+    /// Idle: Board is in boot mode and is idling
+    /// Standby: Board is updating firmware and awaiting next transmission
     /// </summary>
     public enum BoardStatus
     {
@@ -25,6 +24,9 @@ namespace Metra.Axxess
         Standby
     };
 
+    /// <summary>
+    /// An enum containing all possible board types.
+    /// </summary>
     public enum BoardType
     {
         HIDChecksum,
@@ -35,7 +37,8 @@ namespace Metra.Axxess
     };
 
     /// <summary>
-    /// Only includes possible response packets from the board.  Not being used.
+    /// Only includes possible response packets from the board.  
+    /// Not currently being used.
     /// </summary>
     public enum PacketType
     {
@@ -46,13 +49,35 @@ namespace Metra.Axxess
         ASWCConfirm
     };
 
+    /// <summary>
+    /// Defines an event to take place on receiving an intro reply from a connected device.
+    /// </summary>
     public delegate void IntroEventHandler(object sender, PacketEventArgs e);
+    /// <summary>
+    /// Defines an event to take place on receiving a firmware ack.
+    /// </summary>
     public delegate void AckEventHandler(object sender, EventArgs e);
+    /// <summary>
+    /// Defines an event to take place on receiving a firmware finalized packet.
+    /// </summary>
     public delegate void FinalEventHandler(object sender, EventArgs e);
+    /// <summary>
+    /// Defines an event to take place on receiving an ASWCInfo packet.
+    /// </summary>
     public delegate void ASWCInfoHandler(object sender, EventArgs e);
+    /// <summary>
+    /// Defines an event to take place on receiving an ASWC mapping confirmation.
+    /// </summary>
     public delegate void ASWCConfirmHandler(object sender, EventArgs e);
+    /// <summary>
+    /// Defines an event to take place on receiving any packet.  
+    /// Intended to provide custom functionality.
+    /// </summary>
     public delegate void PacketHandler(object sender, PacketEventArgs e);
 
+    /// <summary>
+    /// Stores and provides access to the contents of the packet which triggered the event.
+    /// </summary>
     public class PacketEventArgs : EventArgs
     {
         public byte[] Packet { get; private set; }
@@ -63,6 +88,9 @@ namespace Metra.Axxess
         }
     }
 
+    /// <summary>
+    /// Stores and provides access to the ASWCInfo obejct which triggered the event.
+    /// </summary>
     public class ASWCEventArgs : EventArgs
     {
         public ASWCInfo Info { get; private set; }
@@ -100,14 +128,46 @@ namespace Metra.Axxess
         /// </summary>
         ASWCInfo ASWCInformation { get; }
 
+        /// <summary>
+        /// Returns the type of the board in question.
+        /// </summary>
         BoardType Type { get; }
 
+        /// <summary>
+        /// Returns the board's relevant packet size.
+        /// Actual transmitted packets may be larger than this, 
+        /// but this is how many bytes the board actually reads.
+        /// </summary>
         int PacketSize { get; }
 
+        /// <summary>
+        /// Method to prepare a packet for transmission.
+        /// </summary>
+        /// <param name="packet">The raw packet.</param>
+        /// <returns>The prepared packet.</returns>
         byte[] PrepPacket(byte[] packet);
+
+        /// <summary>
+        /// Returns a fully prepared intro packet, ready to be transmitted.
+        /// </summary>
         byte[] IntroPacket { get; }
+
+        /// <summary>
+        /// Returns a fully prepared ready packet.  Packet is used to tell
+        /// the board to get ready to receive firmware.
+        /// </summary>
         byte[] ReadyPacket { get; }
+
+        /// <summary>
+        /// Returns a fully prepared ASWCInfo request packet.
+        /// </summary>
         byte[] ASWCRequestPacket { get; }
+
+        /// <summary>
+        /// Returns a checksum calculated from the provided packet.
+        /// </summary>
+        /// <param name="packet">The relevant part of the packet.</param>
+        /// <returns>A checksum in byte form.</returns>
         byte CalculateChecksum(byte[] packet);
 
         /// <summary>

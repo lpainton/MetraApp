@@ -11,10 +11,23 @@ using System.Management;
 
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// Objects of this class are returned from a successful asynchronous read operation.
+    /// </summary>
     public class CDCAsynchReadResult : IAsyncResult
     {
+        /// <summary>
+        /// The current state of the CDC device.
+        /// </summary>
         public object State { get; set; }
+        /// <summary>
+        /// Was the read completed?
+        /// </summary>
         public bool IsCompleted { get; set; }
+        /// <summary>
+        /// The test mode of the CDC device.  
+        /// Used to determine logging and feedback requirements.
+        /// </summary>
         public bool TestMode { get; set; }
 
         public CDCAsynchReadResult()
@@ -44,13 +57,34 @@ namespace Metra.Axxess
         }
     }
 
+    /// <summary>
+    /// A class representing a generic CDC device.
+    /// </summary>
+    /// <remarks>
+    /// CDCDevices are both HID and Serial Ports.  Hence the CDCDevice inherits from the same Win32USB base
+    /// class as all the Axxess HID boards.  When conneted, a CDCDevice will register itself as a USB device
+    /// and so we can find it in the connected USB devices, but then we uses System.IO.Ports to communicate.
+    /// 
+    /// Note that some of this class is derived from HIDDevice and thus can be credited to the HIDLib that come from.
+    /// </remarks>
     public class CDCDevice : Win32Usb
     {
+        /// <summary>
+        /// SerialPort resource respresenting this device.
+        /// </summary>
         public SerialPort Port { get { return _serialPort; } }
         SerialPort _serialPort;
+
+        /// <summary>
+        /// True if no further reads are required.
+        /// False if reading should continue.
+        /// </summary>
         public bool StopRead { get; set; }
         public bool TestMode { get; set; }
 
+        /// <summary>
+        /// Length of time in ms till read timeout.
+        /// </summary>
         public int ReadTimeout
         {
             get 
@@ -62,6 +96,9 @@ namespace Metra.Axxess
                 _serialPort.ReadTimeout = value;
             }
         }
+        /// <summary>
+        /// Length of time in ms till write timeout.
+        /// </summary>
         public int WriteTimeout
         {
             get
@@ -74,6 +111,12 @@ namespace Metra.Axxess
             }
         }
 
+        /// <summary>
+        /// Constructs a CDC device.  Most of the parameters are used to configure
+        /// the underlying <see cref="SerialPort">SerialPort</see> object.  
+        /// This version of the constructor searches for an open port rather than 
+        /// constructing a new one.
+        /// </summary>
         public CDCDevice(int baud, Parity parity, int dataBits, StopBits stop, Handshake hs,
             int readTimeOut, int writeTimeOut, bool testMode = false)
         {
@@ -93,6 +136,10 @@ namespace Metra.Axxess
             _serialPort.WriteTimeout = WriteTimeout;
         }
 
+        /// <summary>
+        /// This constructor returns a CDC object with a new SerialPort attached.
+        /// For all practical purposes you should use the other constructor.
+        /// </summary>
         public CDCDevice(string name, int baud, Parity parity, int dataBits, StopBits stop, Handshake hs,
             int readTimeOut, int writeTimeOut, bool testMode = false)
         {
@@ -114,6 +161,11 @@ namespace Metra.Axxess
             //this.Initialize();
         }
 
+        /// <summary>
+        /// Uses WMI to search for a port containing Microchip in the name.
+        /// This might fail if more than one microchip device is attached.
+        /// </summary>
+        /// <returns>The string representing the port name.</returns>
         protected string SearchForPort()
         {
             SelectQuery sq = new SelectQuery("Win32_PnPEntity");
@@ -136,6 +188,9 @@ namespace Metra.Axxess
             throw new System.IO.IOException("No CDC COM port identified!");
         }
 
+        /// <summary>
+        /// Opens the port and starts the read thread.
+        /// </summary>
         protected virtual void Initialize()
         {
             this.StopRead = false;
@@ -166,6 +221,9 @@ namespace Metra.Axxess
             }
         }
 
+        /// <summary>
+        /// Overload this method for packet handling.
+        /// </summary>
         protected virtual void HandleDataReceived(byte[] packet) { }
 
         protected virtual void HandleDeviceRemoved() 
@@ -175,6 +233,10 @@ namespace Metra.Axxess
         }
         public event EventHandler OnDeviceRemoved;
 
+        /// <summary>
+        /// Starts a new thread implementing an asynch read.
+        /// </summary>
+        /// <param name="callback">The callback method which is called at the end of the read thread.</param>
         public void BeginRead(AsyncCallback callback)
         {
             CDCAsynchReadResult result = new CDCAsynchReadResult();
@@ -200,6 +262,10 @@ namespace Metra.Axxess
             });
             ReadWorker.Start(result);
         }
+
+        /// <summary>
+        /// Starts the asynch read process.
+        /// </summary>
         private void BeginAsyncRead()
         {
             if (_serialPort.IsOpen)
@@ -211,6 +277,11 @@ namespace Metra.Axxess
                 throw new System.IO.IOException("Port was not open for read operation.");
             }
         }
+
+        /// <summary>
+        /// Callback invoked at the end of a read.
+        /// </summary>
+        /// <param name="result">The result of the read.</param>
         public void ReadCompleted(IAsyncResult result)
         {
             try
@@ -228,12 +299,17 @@ namespace Metra.Axxess
                 }
             }
         }
+
+        /// <summary>
+        /// Reads a byte from the serial port, else it returns a zero byte.
+        /// </summary>
+        /// <returns>One byte read from the serial port</returns>
         public byte Read()
         {
             try
             {
                 byte b = Convert.ToByte(_serialPort.ReadByte());
-                Log.Write(b.ToString() + " " + Convert.ToInt32(b).ToString() + " " + Convert.ToChar(b).ToString());
+                Log.Write(String.Format("{0} {1} {2}", b.ToString(), Convert.ToInt32(b).ToString(), Convert.ToChar(b).ToString()), LogMode.Verbose);
                 return b;
             }
             catch (System.IO.IOException)
@@ -251,6 +327,10 @@ namespace Metra.Axxess
             return 0x00;
         }
 
+        /// <summary>
+        /// Writes a packet of bytes to the serial port.
+        /// </summary>
+        /// <param name="packet">The packet to send.</param>
         public void Write(byte[] packet)
         {
             if (this._serialPort.IsOpen)
@@ -270,6 +350,9 @@ namespace Metra.Axxess
             }
         }
 
+        /// <summary>
+        /// Stops the read process and closes the port.
+        /// </summary>
         public void Dispose()
         {
             this.StopRead = true;
@@ -291,21 +374,10 @@ namespace Metra.Axxess
 
         }
 
-        #region Test
-        /*void TestConsoleWrite(string s)
-        {
-            Util.TestConsoleWrite(this.TestMode, s);
-        }*/
-        public static void TestConnect()
-        {
-
-        }
-        #endregion
-
-        #region Public static
+        #region Static Methods
         /// <summary>
         /// Helper method to return the device path given a DeviceInterfaceData structure and an InfoSet handle.
-        /// Used in 'FindDevice' so check that method out to see how to get an InfoSet handle and a DeviceInterfaceData.
+        /// Used in <see cref="FindDevice(int, int, Type)">FindDevice</see>.'
         /// </summary>
         /// <param name="hInfoSet">Handle to the InfoSet</param>
         /// <param name="oInterface">DeviceInterfaceData structure</param>
@@ -317,7 +389,7 @@ namespace Metra.Axxess
             if (!SetupDiGetDeviceInterfaceDetail(hInfoSet, ref oInterface, IntPtr.Zero, 0, ref nRequiredSize, IntPtr.Zero))
             {
                 DeviceInterfaceDetailData oDetail = new DeviceInterfaceDetailData();
-                oDetail.Size = 5;	// hardcoded to 5! Sorry, but this works and trying more future proof versions by setting the size to the struct sizeof failed miserably. If you manage to sort it, mail me! Thx
+                oDetail.Size = 5; //This number is just hardcoded
                 if (SetupDiGetDeviceInterfaceDetail(hInfoSet, ref oInterface, ref oDetail, nRequiredSize, ref nRequiredSize, IntPtr.Zero))
                 {
                     return oDetail.DevicePath;

@@ -79,7 +79,7 @@ namespace MetraWPFBrowserApp
         {
             while (this.Device == null)
             {
-                this.Device = AxxessConnector.InitiateConnection();
+                this.Device = AxxessConnector.ResolveConnection();
                 Thread.Sleep(10);
             }
 

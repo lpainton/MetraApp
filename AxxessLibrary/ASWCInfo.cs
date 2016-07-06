@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// Represents a logical grouping of options in the ASWC schema.
+    /// </summary>
     public enum SectionChanged
     {
         Radio = 0x01,
@@ -16,6 +19,9 @@ namespace Metra.Axxess
         SpeedControl = 0x20
     };
 
+    /// <summary>
+    /// Individual button functions for the ASWC schema, shared between normal and press-and-hold actions.
+    /// </summary>
     public enum ASWCButtonTypes
     {
         Default,
@@ -39,6 +45,9 @@ namespace Metra.Axxess
         TemperatureDown
     };
 
+    /// <summary>
+    /// A mapping of ASWC response bytes to names.
+    /// </summary>
     public enum ResponseError
     {
         GOOD = 0x00,
@@ -49,61 +58,12 @@ namespace Metra.Axxess
         FAILURE_REMAP = 0x08
     };
 
+    /// <summary>
+    /// This class is a composite mapping for Axxess Steering Wheel Control (ASWC) data.  
+    /// It is serializable from and to both JSON and Axxess's ASWC byte protocol.
+    /// </summary>
     public class ASWCInfo
     {
-        /*        
-        RemappingModel.ASWCVersionByteOne = bytes[3 + add]
-        RemappingModel.ASWCVersionByteTwo = bytes[4 + add]
-        RemappingModel.ASWCVersionByteThree = bytes[5 + add]
-        RemappingModel.radioType = bytes[6 + add]
-        RemappingModel.carBusType = bytes[7 + add]
-        RemappingModel.carFlavor = bytes[9 + add]
-        RemappingModel.stalkPresentFlag = bytes[13 + add]
-        RemappingModel.stalkOrientation = bytes[14 + add]
-        RemappingModel.pressAndHoldFlagOne = bytes[15 + add]
-        RemappingModel.pressAndHoldFlagTwo = bytes[16 + add]
-        RemappingModel.pressAndHoldFlagThree = bytes[17 + add]
-        
-        RemappingModel.phVolumeUp = bytes[18 + add]
-        RemappingModel.phVolumeDown = bytes[19 + add]
-        RemappingModel.phSeekUp = bytes[20 + add]
-        RemappingModel.phSeekDown = bytes[21 + add]
-        RemappingModel.phModeOrSource = bytes[22 + add]
-        RemappingModel.phMute = bytes[23 + add]
-        RemappingModel.phPresetUp = bytes[24 + add]
-        RemappingModel.phPresetDown = bytes[25 + add]
-        RemappingModel.phPower = bytes[26 + add]
-        RemappingModel.phBand = bytes[27 + add]
-        RemappingModel.phPlayOrEnter = bytes[28 + add]
-        RemappingModel.phPTT = bytes[29 + add]
-        RemappingModel.phOnHook = bytes[30 + add]
-        RemappingModel.phOffHook = bytes[31 + add]
-        RemappingModel.phFanUp = bytes[32 + add]
-        RemappingModel.phFanDown = bytes[33 + add]
-        RemappingModel.phTempUp = bytes[34 + add]
-        RemappingModel.phTempDown = bytes[35 + add]
-        
-        RemappingModel.buttonRemapFlag = bytes[39 + add]
-        RemappingModel.volumeUp = bytes[40 + add]
-        RemappingModel.volumeDown = bytes[41 + add]
-        RemappingModel.seekUp = bytes[42 + add]
-        RemappingModel.seekDown = bytes[43 + add]
-        RemappingModel.modeOrSource = bytes[44 + add]
-        RemappingModel.mute = bytes[45 + add]
-        RemappingModel.presetUp = bytes[46 + add]
-        RemappingModel.presetDown = bytes[47 + add]
-        RemappingModel.power = bytes[48 + add]
-        RemappingModel.band = bytes[49 + add]
-        RemappingModel.playOrEnter = bytes[50 + add]
-        RemappingModel.PTT = bytes[51 + add]
-        RemappingModel.onHook = bytes[52 + add]
-        RemappingModel.offHook = bytes[53 + add]
-        RemappingModel.fanUp = bytes[54 + add]
-        RemappingModel.fanDown = bytes[55 + add]
-        RemappingModel.tempUp = bytes[56 + add]
-        RemappingModel.tempDown = bytes[57 + add]
-        */
-
         public string[] ButtonList { get { return Enum.GetNames(typeof(ASWCButtonTypes)); } }
         private Dictionary<byte, string> _radioList;
         public string[] RadioList { get { return _radioList.Values.ToArray(); } }
@@ -122,13 +82,14 @@ namespace Metra.Axxess
         {
             get
             {
-                StringBuilder sb = new StringBuilder();
+                return String.Format("{0}.{1}.{2}", VersionMajor, VersionMinor, VersionBuild);
+                /*StringBuilder sb = new StringBuilder();
                 sb.Append(VersionMajor.ToString());
                 sb.Append(".");
                 sb.Append(VersionMinor.ToString());
                 sb.Append(".");
                 sb.Append(VersionBuild.ToString());
-                return sb.ToString();
+                return sb.ToString();*/
             }
         }
 
@@ -139,52 +100,16 @@ namespace Metra.Axxess
         public bool StalkPresent { get; set; }
         public byte StalkOrientation { get; set; }
         public bool[] PressHoldFlags { get; set; }
-        //byte PressHoldFlags1 { get { return _phFlag1; } }
-        //byte PressHoldFlags2 { get { return _phFlag2; } }
-        //byte PressHoldFlags3 { get { return _phFlag3; } }
         public byte[] PressHoldValues { get; set; }
-        /*public byte PressHoldVolumeUp { get; set; }
-        public byte PressHoldVolumeDown { get; set; }
-        public byte PressHoldSeekUp { get; set; }
-        public byte PressHoldSeekDown { get; set; }
-        public byte PressHoldModeSource { get; set; }
-        public byte PressHoldMute { get; set; }
-        public byte PressHoldPresetUp { get; set; }
-        public byte PressHoldPresetDown { get; set; }
-        public byte PressHoldPower { get; set; }
-        public byte PressHoldBand { get; set; }
-        public byte PressHoldPlayEnter { get; set; }
-        public byte PressHoldPTT { get; set; }
-        public byte PressHoldOnHook { get; set; }
-        public byte PressHoldOffHook { get; set; }
-        public byte PressHoldFanUp { get; set; }
-        public byte PressHoldFanDown { get; set; }
-        public byte PressHoldTempUp { get; set; }
-        public byte PressHoldTempDown { get; set; }*/
         public bool ButtonRemapActive { get; set; }
         public byte[] ButtonRemapValues { get; set; }
-        /*public byte VolumeUp { get; set; }
-        public byte VolumeDown { get; set; }
-        public byte SeekUp { get; set; }
-        public byte SeekDown { get; set; }
-        public byte ModeSource { get; set; }
-        public byte Mute { get; set; }
-        public byte PresetUp { get; set; }
-        public byte PresetDown { get; set; }
-        public byte Power { get; set; }
-        public byte Band { get; set; }
-        public byte PlayEnter { get; set; }
-        public byte PTT { get; set; }
-        public byte OnHook { get; set; }
-        public byte OffHook { get; set; }
-        public byte FanUp { get; set; }
-        public byte FanDown { get; set; }
-        public byte TempUp { get; set; }
-        public byte TempDown { get; set; }*/
 
         byte _phFlag1, _phFlag2, _phFlag3;
-        byte[] _rawPacket;
+        byte[] _aswcPacket;
 
+        /// <summary>
+        /// Constructs an ASWC object with default values.
+        /// </summary>
         public ASWCInfo()
         {
 
@@ -242,12 +167,24 @@ namespace Metra.Axxess
             this.ButtonRemapValues = new byte[this.ButtonList.Length - 1];
         }
 
-        public ASWCInfo(byte[] raw) : this()
+        /// <summary>
+        /// Constructor which stores and then deserializes an ASWC packet.
+        /// </summary>
+        /// <param name="aswcPacket">Byte array encoded in ASWC protocol.</param>
+        public ASWCInfo(byte[] aswcPacket) : this()
         {
-            this._rawPacket = raw;   
-            ProcessRawPacket(raw);
+            this._aswcPacket = aswcPacket;   
+            Deserialize(aswcPacket);
         }
 
+        /// <summary>
+        /// Method parses the PressAndHold flags used to indicate which PH functions have been modified.
+        /// This is necessary because the flags are serialized as three separate bytes and must be parsed for content.
+        /// </summary>
+        /// <param name="f1">The first flags byte.</param>
+        /// <param name="f2">The second flags byte.</param>
+        /// <param name="f3">The third flags byte.</param>
+        /// <returns>An array of bits corresponding to PH flags.</returns>
         private bool[] ParsePHFlags(byte f1, byte f2, byte f3)
         {
             bool[] flags = new bool[24];
@@ -275,6 +212,10 @@ namespace Metra.Axxess
             return flags;
         }
 
+        /// <summary>
+        /// Updates the stored Press-and-Hold flags with values from the composite array.
+        /// </summary>
+        /// <remarks>This should eventually be refactored as part of the serialization process.</remarks>
         private void UpdatePHFlags()
         {
             int ph1 = 0, ph2 = 0, ph3 = 0;
@@ -304,7 +245,15 @@ namespace Metra.Axxess
             return values;
         }
 
-        public byte[] GetRawPacket(IList<SectionChanged> changes)
+        /// <summary>
+        /// Serializes the object using ASWC byte protocols for transmission to an ASWC enabled device.
+        /// The list of sections changed is part of the transmission protocol and not technically necessary for serialization.
+        /// </summary>
+        /// <param name="changes">A list of changed sections.  
+        /// ASWC ignores any section that hasn't been flagged as changed, so this list is needed to compose change flags.</param>
+        /// <returns>A a 'packet' of bytes in ASWC format contained in a byte array.</returns>
+        /// <remarks>When deserialize is made static, this should be static as well for the sake of symmetry.</remarks>
+        public byte[] Serialize(IList<SectionChanged> changes)
         {
             byte[] packet = new byte[59];
 
@@ -342,33 +291,48 @@ namespace Metra.Axxess
             return packet;
         }
 
-        public void ProcessRawPacket(byte[] raw)
+        /// <summary>
+        /// Accepts an ASWC formatted packet deserializes it into this ASWCInfo object.
+        /// </summary>
+        /// <param name="aswcPacket">A byte array encoded with the ASWC protocol.</param>
+        /// <remarks>Ultimately this should be refactored as a static method which returns a new ASWCInfo object.</remarks>
+        public void Deserialize(byte[] aswcPacket)
         {
-            this.VersionMajor = raw[3];
-            this.VersionMinor = raw[4];
-            this.VersionBuild = raw[5];
-            this.RadioType = raw[6];
-            this.CarCommBus = raw[7];
-            this.CarFlavor = raw[9];
+            this.VersionMajor = aswcPacket[3];
+            this.VersionMinor = aswcPacket[4];
+            this.VersionBuild = aswcPacket[5];
+            this.RadioType = aswcPacket[6];
+            this.CarCommBus = aswcPacket[7];
+            this.CarFlavor = aswcPacket[9];
             
-            this.StalkPresent = raw[13].Equals(0x01);
-            this.StalkOrientation = raw[14];
+            this.StalkPresent = aswcPacket[13].Equals(0x01);
+            this.StalkOrientation = aswcPacket[14];
 
-            this._phFlag1 = raw[15];
-            this._phFlag2 = raw[16];
-            this._phFlag3 = raw[17];
+            this._phFlag1 = aswcPacket[15];
+            this._phFlag2 = aswcPacket[16];
+            this._phFlag3 = aswcPacket[17];
             this.PressHoldFlags = this.ParsePHFlags(this._phFlag3, this._phFlag2, this._phFlag1);
-            this.PressHoldValues = this.ParseButtonValues(raw, 18);
-            this.SpeedControl = raw[36];
-            this.ButtonRemapActive = raw[39].Equals(0x01);
-            this.ButtonRemapValues = this.ParseButtonValues(raw, 40);
+            this.PressHoldValues = this.ParseButtonValues(aswcPacket, 18);
+            this.SpeedControl = aswcPacket[36];
+            this.ButtonRemapActive = aswcPacket[39].Equals(0x01);
+            this.ButtonRemapValues = this.ParseButtonValues(aswcPacket, 40);
         }
 
+        /// <summary>
+        /// Creates a deep copy clone of this object from the original serialized packet.
+        /// Note that this doesn't capture any changes that occur between serialization/deserialization events.
+        /// </summary>
+        /// <returns></returns>
         public ASWCInfo Clone()
         {
-            return new ASWCInfo(_rawPacket);
+            return new ASWCInfo(_aswcPacket);
         }
 
+        /// <summary>
+        /// Constructs a string representation of the ASWC info in the object.
+        /// </summary>
+        /// <returns>A String representing this object.</returns>
+        /// <remarks>Primarily intended for debugging, not to serve as a view for this object.</remarks>
         public string ToString()
         {
             StringBuilder sb = new StringBuilder();

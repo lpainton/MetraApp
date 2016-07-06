@@ -7,10 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-//using FTD2XX_NET;
-
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// Class represents an Axxess board using the FTDI chipset for communication.
+    /// </summary>
     public class AxxessFTDIBoard : IAxxessBoard
     {
         //Board attributes
@@ -58,12 +59,21 @@ namespace Metra.Axxess
         public byte[] ASWCRequestPacket { get; protected set; }
 
         public BoardType Type { get; protected set; }
+        /// <summary>
+        /// The cable connecting this device to the computer.
+        /// </summary>
         public FTDICable FTDIDevice { get; protected set; }
+        /// <summary>
+        /// Which baud rate is being used?
+        /// </summary>
         public uint BaudRate { get; protected set; }
 
+        /// <summary>
+        /// When this is set to true, the system will stop reading packets from the device.
+        /// </summary>
         public bool StopRead { get; set; }
 
-        public AxxessFTDIBoard(FTDICable connector, uint baudRate)
+        internal AxxessFTDIBoard(FTDICable connector, uint baudRate)
         {
             this.ProductID = String.Empty;
             this.AppFirmwareVersion = String.Empty;
@@ -71,7 +81,7 @@ namespace Metra.Axxess
             this.Status = BoardStatus.Idle;
 
             this.PacketSize = 44;
-            //01 F0 10 03 A0 01 0F 58 04
+
             this.IntroPacket = new byte[] { 0x01, 0xF0, 0x10, 0x03, 0xA0, 0x01, 0x0F, 0x58, 0x04 };
             this.ReadyPacket = new byte[] { 0x01, 0xF0, 0x20, 0x00, 0xEB, 0x04 };
 
@@ -125,7 +135,7 @@ namespace Metra.Axxess
         }
 
         /// <summary>
-        /// Method to extract board versioning info from intro response packets
+        /// Method to extract board versioning info from intro response packets.
         /// </summary>
         /// <param name="packet">The received packet</param>
         /// <returns>True of intro packet, else false</returns>
@@ -155,11 +165,7 @@ namespace Metra.Axxess
                 this.AppFirmwareVersion = words[2];
             this.OnIntro -= ParseIntroPacket;
             return;
-        }
-        /*protected virtual bool ProcessIntroPacket(byte[] packet)
-        {
-            this.ParseIntroPacket(packet);
-        }*/        
+        }     
 
         //Event related stuff
         public virtual bool IsAck(byte[] packet) 
@@ -175,14 +181,15 @@ namespace Metra.Axxess
         /// This method is called asynchronously when a packet is received.
         /// It will forward the packet to the appropriate event handler based on identification
         /// </summary>
-        /// <param name="oInRep">The input report containing the packet</param>
-        /// Ack ready to start update: 01 60 01 0F 20 00 CC 04 00
-        /// Ack ready for next: 01 60 39 39 41
-        /// Ack update completed: 01 60 38 38
+        /// <param name="packet">An array of bytes representing an input packet.</param>
+        /// <remarks>
+        /// Notable packets:
+        ///     Ack ready to start update: 01 60 01 0F 20 00 CC 04 00
+        ///     Ack ready for next: 01 60 39 39 41
+        ///     Ack update completed: 01 60 38 38
+        /// </remarks>
         protected virtual void HandleDataReceived(byte[] packet)
         {
-            //byte[] packet = InRep.Buffer;
-
             if (OnPacket != null)
             {
                 OnPacketReceived(new PacketEventArgs(packet));
@@ -191,24 +198,15 @@ namespace Metra.Axxess
             {
                 OnIntroReceived(new PacketEventArgs(packet));
             }
-
-            /*if (this.ProductID.Equals(String.Empty))
-            {
-                if (this.ProcessIntroPacket(packet))
-                    this.OnIntroReceived(new PacketEventArgs(packet));
-            }*/
-
-            //else if (this.IsAck(packet)) this.OnAckReceived(new PacketEventArgs(packet));
-            //else if (this.IsFinal(packet)) this.OnFinalReceived(new PacketEventArgs(packet));
-            //foreach (byte b in packet) { Console.Write("{0} ", Convert.ToChar(b)); }
-            //Console.WriteLine();
-
         }
         protected virtual void HandleDeviceRemoved()
         {
 
         }
 
+        /// <summary>
+        /// Begins an asynch read operation.
+        /// </summary>
         private void BeginAsyncRead()
         {
             if (FTDIDevice.IsPortOpen)
@@ -217,6 +215,11 @@ namespace Metra.Axxess
                 FTDIDevice.BeginRead(buffer, ReadCompleted);
             }
         }
+
+        /// <summary>
+        /// Callback used at the end of the read operation.
+        /// </summary>
+        /// <param name="result">The result of the read op.</param>
         public void ReadCompleted(IAsyncResult result)
         {
             try

@@ -9,8 +9,11 @@ using System.Windows.Forms;
 namespace Metra.Axxess
 {
    /// <summary>
-    /// Class based implementation of the HID w/ Checksum board
-    /// </summary>
+   /// Class representation of an Axxess HID w/ Checksum (HID-1) board
+   /// </summary>
+   /// <remarks>
+   /// This and HID-2 are the most common board types on the market.
+   /// </remarks>
     public class AxxessHIDCheckBoard : AxxessHIDBoard
     {
         public AxxessHIDCheckBoard() : base() { }
@@ -133,7 +136,7 @@ namespace Metra.Axxess
 
         public override void SendASWCMappingRequest(ASWCInfo info, IList<SectionChanged> list)
         {
-            List<byte> packet = new List<byte>(info.GetRawPacket(list));
+            List<byte> packet = new List<byte>(info.Serialize(list));
             packet.InsertRange(0, new byte[4] { 0x00, 0x55, 0xB0, 0x3B });
             packet.Add(0x04);
             byte csum = CalculateChecksum(packet.ToArray());

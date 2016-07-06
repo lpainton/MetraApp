@@ -11,6 +11,9 @@ using System.Windows;
 
 namespace MetraWPFBrowserApp
 {
+    /// <summary>
+    /// Enum represents all valid states in the app state machine.
+    /// </summary>
     public enum AppState
     {
         Loading,
@@ -20,8 +23,19 @@ namespace MetraWPFBrowserApp
         Streaming
     };
 
+    /// <summary>
+    /// Singleton class which handles most of the main window logic.
+    /// </summary>
     class MetraApp
     {
+        public static MetraApp SingleInstance { get; set; }
+        public static MetraApp GetInstance(MainWindow window)
+        {
+            if (SingleInstance == null)
+                SingleInstance = new MetraApp(window);
+            return SingleInstance;
+        }
+
         public AppState State { get; private set; }
         AppUpdateTimer UpdateTimer { get; set; }
         FileManager FManager { get; set; }
@@ -39,9 +53,10 @@ namespace MetraWPFBrowserApp
         ConfigureButtonLogic ConfBtnLogic { get; set; }
         ProgressBarLogic ProgBarLogic { get; set; }
 
-        public MetraApp(MainWindow mainWin)
+        private MetraApp(MainWindow mainWin)
         {
             this.MainWin = mainWin;
+            //Logic controllers modularly manage the controls on the MainWindow
             this.BInfoLogic = new BoardInfoLogic(mainWin.BoardInfoBlock);
             this.MainLblLogic = new MainLabelLogic(mainWin.MainLabel);
             this.ConnBtnLogic = new ConnectButtonLogic(mainWin.ConnectButton);
@@ -94,7 +109,9 @@ namespace MetraWPFBrowserApp
         }
         #endregion
 
-        //Event fired by timer object
+        /// <summary>
+        /// Event fired by timer object to update periodic controls
+        /// </summary>
         private void Update(object s, System.Timers.ElapsedEventArgs e)
         {
             if (!(this.ActiveOperation == null) && !this.ActiveOperation.Message.Equals(String.Empty))
@@ -106,6 +123,9 @@ namespace MetraWPFBrowserApp
             ProgBarLogic.Update(this.ActiveOperation);
         }
 
+        /// <summary>
+        /// Sets the application to an idle state.
+        /// </summary>
         public void ResetToIdle()
         {
             if (this.ActiveOperation != null)
@@ -122,6 +142,11 @@ namespace MetraWPFBrowserApp
             this.ChangeAppState(AppState.NoDevice);
         }
 
+        /// <summary>
+        /// Changes from current state to a new valid state.
+        /// Triggers updates on all state sensitive controls.
+        /// </summary>
+        /// <param name="newState">The state to change to.</param>
         public void ChangeAppState(AppState newState)
         {
             this.State = newState;
@@ -283,6 +308,11 @@ namespace MetraWPFBrowserApp
             this.UpdateTimer.Dispose();
         }
 
+        /// <summary>
+        /// Special case of updating firmware from a file.
+        /// </summary>
+        /// <param name="path">The file path</param>
+        /// <param name="token">The firmware token</param>
         private void UpdateFromFile(string path, AxxessFirmwareToken token)
         {
             //Checkpoint

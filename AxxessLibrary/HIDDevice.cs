@@ -23,6 +23,10 @@ namespace Metra.Axxess
 	/// <summary>
 	/// Abstract HID device : Derive your new device controller class from this
 	/// </summary>
+    /// <remarks>
+    /// From: Ashley Deakin's HIDLib
+    /// http://www.developerfusion.com/article/84338/making-usb-c-friendly/
+    /// </remarks>
     public abstract class HIDDevice : Win32Usb, IDisposable
     {
         #region Privates variables

@@ -7,6 +7,9 @@ using System.IO;
 
 namespace Metra.Axxess
 {
+    /// <summary>
+    /// Represents a deserialized FirmwareInfo packet.
+    /// </summary>
     public class AxxessFirmwareInfo
     {
         public string ua { get; set; }
@@ -21,6 +24,16 @@ namespace Metra.Axxess
         }
     }
 
+    /// <summary>
+    /// Class to contain numbers in Axxess's firmware versioning system.
+    /// Contains logic for parsing and comparing versions.
+    /// </summary>
+    /// <remarks>
+    /// This class was necessary because Axxess versions its firmware as a single number string.
+    /// The first two digits of this string are the major version and the last (optional) is the minor.
+    /// Users of the library need the ability to compare version numbers in order to determine if firmware needs
+    /// updating.
+    /// </remarks>
     public class AxxessFirmwareVersion : IComparable
     {
         protected int MajorVer { get; set; }
@@ -45,6 +58,15 @@ namespace Metra.Axxess
             }
         }
 
+        /// <summary>
+        /// Tests if the firmware string is valid.
+        /// </summary>
+        /// <param name="verString">A string represenation of an Axxess firmware version</param>
+        /// <returns>True or false</returns>
+        /// <remarks>
+        /// To be valid, an Axxess firmware version must be at least one and no more than 3 characters in length.
+        /// It cannot contain any characters other than digits.
+        /// </remarks>
         public bool IsValidVersion(string verString)
         {
             return (verString.Length > 1 && verString.Length < 4) ? 
@@ -81,6 +103,10 @@ namespace Metra.Axxess
         }
     }
 
+    /// <summary>
+    /// A composition of the firmware version with attendant data related to it.
+    /// This aggregate result is a container class that can be passed around and returned from methods.
+    /// </summary>
     public class AxxessFirmwareToken
     {
         public string FileName { get; set; }
@@ -105,10 +131,17 @@ namespace Metra.Axxess
         }
     }
 
+    /// <summary>
+    /// This class represents an Axxess firmware including its content and file descriptors.
+    /// Also provides an enumerator for iteration.
+    /// </summary>
+    /// <remarks>
+    /// An Axxess firmware file is a .hex file containing ASCII characters
+    /// formed into hexidecimal numbers.  These can be serialized in byte form
+    /// and transmitted to a matching Axxess device.
+    /// </remarks>
     public class AxxessFirmware : IEnumerable<byte[]>
     {
-        
-
         byte[] _hexFile;
         public int PacketSize { get; private set; }
         public int Count { get { return _hexFile.Length / this.PacketSize; } }

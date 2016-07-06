@@ -7,6 +7,9 @@ using System.Timers;
 
 namespace MetraWPFBrowserApp
 {
+    /// <summary>
+    /// A wrapper for a Timer object.
+    /// </summary>
     class AppUpdateTimer
     {
         System.Timers.Timer UpdateTimer { get; set; }
