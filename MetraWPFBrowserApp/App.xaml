@@ -1,0 +1,11 @@
+﻿<Application x:Class="MetraWPFBrowserApp.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml"
+             DispatcherUnhandledException="LogExceptionHandler"
+             Exit="LogExitHandler"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>
